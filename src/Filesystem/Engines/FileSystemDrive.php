@@ -52,17 +52,21 @@
 
         public function saveFile(string $filenameWithPath, string $toFilename, string $onDirectory = ''): bool
         {
-            return copy($filenameWithPath, $this->getRealPath($onDirectory) . '/', $toFilename);
+            return @copy($filenameWithPath, $this->getRealPath($onDirectory) . '/', $toFilename);
         }
 
         public function deleteFile(string $filenameWithPath): bool
         {
-            return unlink($this->getRealPath($filenameWithPath));
+            return @unlink($this->getRealPath($filenameWithPath));
         }
 
-        public function createDirectory(string $directory, bool $mode = false, bool $recursive = false): bool
+        public function createDirectory(string $directory, bool $mode = null, bool $recursive = false): bool
         {
-            return mkdir($this->getRealPath($directory), $mode, $recursive);
+            $dir = $this->getRealPath($directory);
+            if ($mode !== null) {
+                return mkdir($dir, $mode, $recursive);
+            }
+            return @mkdir($dir);
         }
 
         public function getFileList(string $directory = ''): array
