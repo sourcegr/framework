@@ -23,17 +23,25 @@
         const METHOD_DELETE = 'DELETE';
         const METHOD_OPTIONS = 'OPTIONS';
 
+
         protected $getBag = null;
         protected $postBag = null;
         protected $cookieBag = null;
         protected $fileBag = null;
         protected $serverBag = null;
 
+        public $url = null;
         public $method = null;
 
-
-        public function __construct($get = [], $post = [], $cookie = [], $files = [], $server = [])
+        public function startsWith(string $search): bool
         {
+            return strpos($search, $this->url) === 0;
+        }
+
+
+        public function __construct(string $url='', array $get = [], array $post = [], array $cookie = [], array $files = [], array $server = [])
+        {
+            $this->url = trim($url, "/");
             $this->getBag = new GETParameterBag($get);
             $this->postBag = new POSTParameterBag($post);
             $this->cookieBag = new COOKIEParameterBag($cookie);
@@ -41,33 +49,39 @@
                 $this->createFileBag($files)
             );
             $this->serverBag = new SERVERParameterBag($server);
-
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
         }
 
-        public static function fromHTTP()
-        {
-            return new static($_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
+        public function expectsJson():bool {
+            $accepts = explode(',',  ($this->serverBag->get('HTTP_ACCEPT') ?? ''));
+            return $accepts[0] === 'application/json';
         }
 
-        public function getMethod()
+        public static function fromHTTP(): HttpRequest
+        {
+            $url = explode('?', $_SERVER['REQUEST_URI'])[0];
+            $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
+            return $request;
+        }
+
+        public function getMethod(): string
         {
             return $this->method;
         }
 
-        public function get($var, $type = null)
+        public function get(string $var, string $type = null) : ?string
         {
             if ($type) {
             }
         }
 
-        public function files()
+        public function files(): array
         {
             return $this->fileBag->values();
         }
 
 
-        protected function createFileBag($files)
+        protected function createFileBag(array $files): array
         {
             $normalized = [];
 
@@ -77,8 +91,8 @@
                     continue;
                 }
 
-                foreach ($file['name'] as $index => $name) {
-                    $normalized[$index][$index] = new UploadedFile([
+                foreach ($file['name'] as $idx => $name) {
+                    $normalized[$index][$idx] = new UploadedFile([
                         'name' => $name,
                         'type' => $file['type'][$index],
                         'tmp_name' => $file['tmp_name'][$index],
