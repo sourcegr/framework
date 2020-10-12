@@ -3,7 +3,7 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Http\Session;
+    namespace Sourcegr\Framework\Http\Session;
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
