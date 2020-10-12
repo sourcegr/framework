@@ -11,28 +11,28 @@
     class FileSystemDrive implements FileDriveInterface
     {
         protected $drivePath;
-        protected $driveName;
+
+        protected function getRealPath(string $directory = null): string
+        {
+            $dir = $directory !== null ? $this->drivePath . $directory : $this->drivePath;
+            return $dir . '/';
+        }
 
 
-        public function __construct(string $driveName, string $drivePath)
+        /**
+         * FileSystemDrive constructor.
+         *
+         * @param string $drivePath
+         *
+         * @throws \Exception
+         */
+        public function __construct(string $drivePath)
         {
             if (!is_dir($drivePath)) {
                 throw new \Exception("Dir does not exist");
-//            }else {echo "okkkkkkkkkkkkk $drivePath kkkkkkk";
             }
 
             $this->drivePath = $drivePath;
-            $this->driveName = $driveName;
-        }
-
-        public function getRealPath(string $directory = null): string
-        {
-            return $directory !== null ? $this->drivePath . $directory : $this->drivePath;
-        }
-
-        public function getDriveName(): string
-        {
-            return $this->driveName;
         }
 
         public function getDrivePath(): string
@@ -52,30 +52,45 @@
 
         public function saveFile(string $filenameWithPath, string $toFilename, string $onDirectory = ''): bool
         {
-            return @copy($filenameWithPath, $this->getRealPath($onDirectory) . '/', $toFilename);
+
+            return @copy($filenameWithPath, $this->getRealPath($onDirectory) . $toFilename);
         }
 
-        public function deleteFile(string $filenameWithPath): bool
+        public function deleteFile(string $filename, string $onDirectory = ''): bool
         {
-            return @unlink($this->getRealPath($filenameWithPath));
+
+            return @unlink($this->getRealPath($onDirectory).$filename);
         }
 
-        public function createDirectory(string $directory, bool $mode = null, bool $recursive = false): bool
+        public function createDirectory(string $directory, bool $recursive = false, int $mode = 0755): bool
         {
             $dir = $this->getRealPath($directory);
-            if ($mode !== null) {
-                return mkdir($dir, $mode, $recursive);
-            }
-            return @mkdir($dir);
+//            die($dir);
+            return @mkdir($dir, $mode, $recursive);
         }
 
         public function getFileList(string $directory = ''): array
         {
-            return array_values(array_filter(glob($this->getRealPath($directory) . '/*'), 'is_file'));
+            return array_values(array_filter(glob($this->getRealPath($directory) . '*'), 'is_file'));
         }
 
         public function getDirectoryList(string $directory = ''): array
         {
-            return array_values(array_filter(glob($this->getRealPath($directory) . '/*'), 'is_dir'));
+            return array_values(array_filter(glob($this->getRealPath($directory) . '*'), 'is_dir'));
+        }
+
+        public function deleteDirectory(string $directory, bool $recursive = false): bool
+        {
+            $dir = $this->getRealPath($directory);
+            if (!$recursive) {
+                return @rmdir($dir);
+            }
+        }
+
+
+        public function fileExists(string $file, string $directory = ''): bool
+        {
+            $dir = $this->getRealPath($directory);
+            return file_exists($dir . $file);
         }
     }
