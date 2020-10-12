@@ -33,9 +33,11 @@
         public $url = null;
         public $method = null;
 
-        public function startsWith(string $search): bool
+        public static function fromHTTP(): HttpRequest
         {
-            return strpos($search, $this->url) === 0;
+            $url = explode('?', $_SERVER['REQUEST_URI'])[0];
+            $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
+            return $request;
         }
 
 
@@ -52,16 +54,14 @@
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
         }
 
+        public function URLStartsWith(string $search): bool
+        {
+            return strpos($search, $this->url) === 0;
+        }
+
         public function expectsJson():bool {
             $accepts = explode(',',  ($this->serverBag->get('HTTP_ACCEPT') ?? ''));
             return $accepts[0] === 'application/json';
-        }
-
-        public static function fromHTTP(): HttpRequest
-        {
-            $url = explode('?', $_SERVER['REQUEST_URI'])[0];
-            $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
-            return $request;
         }
 
         public function getMethod(): string
@@ -71,7 +71,8 @@
 
         public function get(string $var, string $type = null) : ?string
         {
-            if ($type) {
+            if (!$type) {
+                $type = 'POST';
             }
         }
 
