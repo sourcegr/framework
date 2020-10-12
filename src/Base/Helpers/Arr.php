@@ -101,8 +101,4 @@
 
             return array_merge(...$all);
         }
-
-        public static function has(string $key)
-        {
-        }
     }
