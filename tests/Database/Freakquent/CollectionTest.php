@@ -9,13 +9,11 @@
 
 
     use Sourcegr\Framework\Database\Freakquent\Freakquent;
-    use Sourcegr\Framework\Database\QueryBuilder\DB;
-    use Sourcegr\Framework\Database\QueryBuilder\Grammars\MySQL;
     use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
     use Sourcegr\Stub\Models\Company;
 
 
-    class CollectionTest extends \PHPUnit\Framework\TestCase
+    class CollectionTest extends TestCase
     {
         private function init()
         {

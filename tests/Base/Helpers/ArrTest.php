@@ -129,22 +129,54 @@
 
         public function testMerge()
         {
-            $array = [1, 2, 3];
-            $actual = ARR::merge($array);
-            $expected = 0000;
+            $array1 = [1, 2, 3];
+            $array2 = [4, 5, 6];
+            $actual = ARR::merge($array1, $array2);
+            $expected = [1, 2, 3, 4, 5, 6];
             $this->assertSame($expected, $actual, "Failure on Arr::merge");
         }
 
-        public function testHas()
-        {
-            $array = [1, 2, 3];
-            $actual = ARR::has($array);
-            $expected = 0000;
-            $this->assertSame($expected, $actual, "Failure on Arr::has");
+        public function testArrayReplaceBothArrays() {
+            $array1 = ['a' => 1, 'b' => 2, 'c' => 3];
+            $array2 = ['a' => 4, 'b' => 5, 'c' => 6];
+            $actual = ARR::arrayReplace($array1, $array2);
+            $expected = $array2;
+            $this->assertSame($expected, $actual, "Failure on Arr::arrayReplace");
         }
+        public function testArrayReplaceBothArraysSome() {
+            $array1 = ['a' => 1, 'b' => 2, 'c' => 3];
+            $array2 = ['a' => 4, 'b' => 5, 'd' => 6];
+            $actual = ARR::arrayReplace($array1, $array2);
+            $expected = ['a' => 4, 'b' => 5, 'c'=> 3, 'd' => 6];
+            $this->assertSame($expected, $actual, "Failure on Arr::arrayReplace");
+        }
+
+
+        public function testArrayReplaceBothArrayObjects() {
+            $array1 = $this->getArrayObjectObject();
+            $array2 = new \ArrayObject(['a' => 5, 'b' => 5, 'c' => 5]);
+            $actual = ARR::arrayReplace($array1, $array2);
+            $actual = ARR::getPureArray($actual);
+            $expected = ['a' => 5, 'b' => 5, 'c' => 5];
+            $this->assertSame($expected, $actual, "Failure on Arr::arrayReplace");
+        }
+        public function testArrayReplaceBothArrayObjectsSome() {
+            $array1 = $this->getArrayObjectObject();
+            $array2 = new \ArrayObject(['a' => 5, 'b' => 5, 'd' => 5]);
+            $actual = ARR::arrayReplace($array1, $array2);
+            $actual = ARR::getPureArray($actual);
+            $expected = ['a' => 5, 'b' => 5, 'c' => 3, 'd' => 5];
+            $this->assertSame($expected, $actual, "Failure on Arr::arrayReplace");
+        }
+
 
         private function getArrayObject()
         {
             return new \ArrayObject([1, 2, 3]);
+        }
+
+        private function getArrayObjectObject()
+        {
+            return new \ArrayObject(['a' => 1, 'b' => 2, 'c' => 3]);
         }
     }
