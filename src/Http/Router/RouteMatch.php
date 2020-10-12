@@ -1,5 +1,7 @@
 <?php
 
+    declare(strict_types=1);
+
 
     namespace Sourcegr\Framework\Http\Router;
 
@@ -8,7 +10,7 @@
 
     class RouteMatch
     {
-        public $varsMap = [];
+        public $vars = [];
         public $route;
 
         protected $parser;
@@ -52,10 +54,18 @@
                 return null;
             }
 
-            if ($routeHasOptional && !$routeHasWildcard && $urlSegmentsLength <= $routeSegmentsLength-2 ) {
-                # we have an optional, but we dont match to the end.
-                # So, the length should be either the same or one lower
-                return null;
+            $countDiff = $routeSegmentsLength - $urlSegmentsLength;
+
+            if ($routeHasOptional){
+                #fail on few
+                if ($countDiff > 1) {
+                    return null;
+                }
+
+                #fail on too many if no wildcard
+                if (!$routeHasWildcard && $countDiff < 0) {
+                    return null;
+                }
             }
 
             foreach ($routeSegments as $index => $segment) {
@@ -63,11 +73,10 @@
                 if (strncmp($segment, '#', 1) === 0) {
                     $segment = substr($segment, 1);
 
-                    $this->varsMap[$segment] = $urlSegments[$index];
+                    $this->vars[$segment] = $urlSegments[$index];
                     $this->checkMap[$index] = $urlSegments[$index];
                     continue;
                 }
-
 
                 #if not, we are looking for an optional variable
                 if (strncmp($segment, '?', 1) === 0) {
@@ -78,18 +87,14 @@
                         # match all forward
                         $rest = array_slice($urlSegments, $index);
                         $this->checkMap = Arr::merge($this->checkMap, $rest);
-                        $this->varsMap[$segment] = implode('/', $rest);
+                        $this->vars[$segment] = implode('/', $rest);
                         break;
                     } else {
-                        if ($urlSegmentsLength > $routeSegmentsLength) {
-                            return null;
-                        }
-
                         if ($urlSegmentsLength < $routeSegmentsLength) {
-                            $this->varsMap[$segment] = null;
+                            $this->vars[$segment] = null;
                         } else {
                             $this->checkMap[$index] = $urlSegments[$index];
-                            $this->varsMap[$segment] = $urlSegments[$index];
+                            $this->vars[$segment] = $urlSegments[$index];
                         }
 
 
@@ -114,7 +119,7 @@
                 // then check if there is a where
                 /** @var callable $where */
                 if ($where = $this->route->getCompiledParam('where')) {
-                    $result = $where($this->varsMap, $this) && $result;
+                    $result = $where($this->vars, $this) && $result;
                 }
 
                 // if there are any predicates, check if they are met

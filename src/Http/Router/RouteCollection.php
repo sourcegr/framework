@@ -7,32 +7,41 @@
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
+    use Sourcegr\Framework\Http\Boom;
 
     class RouteCollection
     {
-        public $routes = [];
-        protected $routeMap = [];
-        protected $fourOhFour = null;
-        protected $defaultRealm = '';
+        const DEFAULT_REALM = 'WEB';
 
-        private function callRouteMethod(string $memberMethod, string $basePath, callable $closure)
+        protected $routes = [];
+        protected $fourOhFour = null;
+        protected $defaultRealm = self::DEFAULT_REALM;
+
+        protected function callRouteMethod(string $memberMethod, string $param, callable $closure = null)
         {
+            if (!$closure) {
+                foreach ($this->routes as $route) {
+                    $route->$memberMethod($param);
+                }
+                return;
+            }
+
             $a = new static($this->defaultRealm);
 
             $closure($a);
 
-            foreach ($a->getRouteMap() as $route) {
-                $route->$memberMethod($basePath);
+            foreach ($a->routes as $route) {
+                $route->$memberMethod($param);
             }
 
-            $this->mergeRoutes($a->getRouteMap());
+            $this->routes = $a->routes;
         }
 
         public function filterRoutes($realm, $method)
         {
             $matched = [];
 
-            foreach ($this->routeMap as $route) {
+            foreach ($this->routes as $route) {
                 if ($realm === $route->getCompiledParam('realm') && $method === $route->getCompiledParam('method')) {
                     $matched[] = $route;
                 }
@@ -41,8 +50,9 @@
             return $matched;
         }
 
-        public function routesByType(array $routes): array
+        public function routesByType(array $routes = null): array
         {
+            $routes = $routes ?? $this->routes;
             $withParams = [];
             $withoutParams = [];
 
@@ -60,17 +70,20 @@
             return [$withoutParams, $withParams];
         }
 
-        /**
-         * @return null
-         */
         public function getFourOhFour()
         {
-            return $this->fourOhFour;
+            $result = $this->fourOhFour ;
+            if ($result === null) {
+                $boom = new Boom();
+                return $boom->send404();
+            }
+
+            return $result;
         }
 
         public function __construct(?string $defaultRealm = null)
         {
-            $this->defaultRealm = $defaultRealm ?? 'WEB';
+            $this->defaultRealm = $defaultRealm ?? self::DEFAULT_REALM;
         }
 
         protected function addRoute(
@@ -80,65 +93,45 @@
             $predicate = null,
             string $middleware = null
         ): Route {
-            $r = new Route($method, $url, $callback, $predicate, $middleware);
+            $r = new Route($this->defaultRealm, $method, $url, $callback, $predicate, $middleware);
 //            $r->setCollection($this);
-            $this->routeMap[] = $r;
+            $this->routes[] = $r;
             return $r;
         }
+//
+//        public function mergeRoutes(array $routes)
+//        {
+//            $this->routes = Arr::merge($this->routes, $routes);
+//            return $this;
+//        }
 
-        public function compile()
+        public function getRoutes()
         {
-            if (!$this->routes) {
-                foreach ($this->routeMap as $route) {
-                    $realm = $route->realm ?? 'WEB';
-                    $method = $route->method;
-
-                    $this->routes[$realm][$method][] = $route;
-                }
-            }
-
             return $this->routes;
         }
 
 
-        public function mergeRoutes(array $routes)
-        {
-            $this->routeMap = Arr::merge($this->routeMap, $routes);
-            return $this;
-        }
-
-        public function getRouteMap()
-        {
-            return $this->routeMap;
-        }
-
-
         // parameter setting
-        public function setPrefix(string $basePath, callable $closure)
+        public function setPrefix(string $basePath, callable $closure = null)
         {
             $this->callRouteMethod('setPrefix', $basePath, $closure);
             return $this;
         }
 
-        public function setMiddleware(string $middleware, callable $closure)
+        public function setMiddleware(string $middleware, callable $closure = null)
         {
             $this->callRouteMethod('setMiddleware', $middleware, $closure);
             return $this;
         }
 
-        public function onRealm(string $realm, callable $closure)
+        public function setRealm(string $realm, callable $closure = null)
         {
             $this->callRouteMethod('setRealm', $realm, $closure);
             return $this;
         }
 
 
-        //
-        public function add($method, $url, $callback)
-        {
-            return $this->addRoute($method, $url, $callback);
-        }
-
+        // methods and basic
         public function GET($url, $callback)
         {
             return $this->addRoute('GET', $url, $callback);
@@ -149,10 +142,25 @@
             return $this->addRoute('POST', $url, $callback);
         }
 
+        public function PUT($url, $callback)
+        {
+            return $this->addRoute('PUT', $url, $callback);
+        }
+
+        public function PATCH($url, $callback)
+        {
+            return $this->addRoute('PATCH', $url, $callback);
+        }
+
+        public function DELETE($url, $callback)
+        {
+            return $this->addRoute('DELETE', $url, $callback);
+        }
+
         /*
          * todo
-         * add public function DELETE
-         * add public function PATCH
+         * add public function FourOhFour
          * add public function ? any more ?
+         * add public function REDIRECT
          */
     }

@@ -1,5 +1,7 @@
 <?php
 
+    declare(strict_types=1);
+
 
     namespace Sourcegr\Framework\Http\Router;
 
@@ -8,10 +10,12 @@
 
     class Route
     {
-        public const IS_NUMBER = '/^[0-9][0-9]$/';
+        public const DEFAULT_REALM = 'WEB';
+        public const IS_POSITIVE_NUMBER = '/^[1-9][0-9]*$/';
 
         protected $url;
-        protected $realm;
+        protected $prefix;
+        protected $realm = self::DEFAULT_REALM;
         protected $method;
         protected $hasWildcardParameter = false;
         protected $where;
@@ -19,9 +23,10 @@
         protected $callback;
         protected $middlewares = [];
 
-        public function __construct($method, $url, $callback, $predicate, $middlewares)
+        public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
         {
-            $this->method = $method;
+            $this->realm = $realm ?? self::DEFAULT_REALM;
+            $this->method = strtoupper($method);
             $this->url = trim($url, "/");
             $this->callback = $callback;
 
@@ -32,19 +37,29 @@
             $this->$middlewares = $middlewares ?? [];
         }
 
-        public function getCompiledParam(string $param) {
-            return $this->$param ?? null;
+        /**
+         * @param string $param
+         *
+         * @return mixed|null
+         */
+        public function getCompiledParam(string $param)
+        {
+            return $param === 'url' ?
+                ($this->prefix . $this->url) :
+                $this->$param ?? null;
         }
 
         public function setPrefix(string $prefix): Route
         {
-            $prefix = $prefix ? trim($prefix, "/") . '/' : '';
-            $this->url = $prefix . $this->url;
+            $this->prefix = $prefix ? trim($prefix, "/") . '/' : '';
             return $this;
         }
 
         public function setMiddleware($middlewares): Route
         {
+            if (!$middlewares) {
+                return $this;
+            }
             $middlewares = Arr::ensureArray($middlewares);
             $this->middlewares = Arr::merge($this->middlewares, $middlewares);
             return $this;
@@ -52,18 +67,23 @@
 
         public function setRealm(string $realm): Route
         {
-            $this->realm = $realm;
+            $this->realm = $realm ?? self::DEFAULT_REALM;
             return $this;
         }
 
         public function setPredicate(callable $predicate): Route
         {
+            if (!$predicate) {
+                return $this;
+            }
             $this->predicates[] = $predicate;
             return $this;
         }
 
-        public function matchesAll() {
+        public function matchesAll(): Route
+        {
             $this->hasWildcardParameter = true;
+            return $this;
         }
 
         public function where($var, $regex = null): Route
@@ -77,12 +97,10 @@
             $this->where = function ($params) use ($arrVar) {
                 $matches = true;
 
-//                foreach ($params as $variable => $value) {
-//                    $matches = $matches && ((bool)preg_match($arrVar[$variable], $value));
-//                }
                 foreach ($arrVar as $variable => $regexp) {
                     $paramValue = $params[$variable] ?? null;
-                    if (!$params) {
+
+                    if ($params === null) {
                         return false;
                     }
                     $matches = $matches && ((bool)preg_match($regexp, $paramValue));
