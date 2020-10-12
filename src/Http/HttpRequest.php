@@ -6,6 +6,7 @@
     namespace Sourcegr\Framework\Http;
 
 
+    use Sourcegr\Framework\Base\ParameterBag;
     use Sourcegr\Framework\Http\Request\COOKIEParameterBag;
     use Sourcegr\Framework\Http\Request\File\UploadedFile;
     use Sourcegr\Framework\Http\Request\FILEParameterBag;
@@ -24,11 +25,13 @@
         const METHOD_OPTIONS = 'OPTIONS';
 
 
-        protected $getBag = null;
-        protected $postBag = null;
-        protected $cookieBag = null;
-        protected $fileBag = null;
-        protected $serverBag = null;
+        protected $getBag;
+        protected $postBag;
+        protected $cookieBag;
+        protected $fileBag;
+        protected $serverBag;
+
+        protected $middlewareData;
 
         public $url = null;
         public $method = null;
@@ -52,6 +55,7 @@
             );
             $this->serverBag = new SERVERParameterBag($server);
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
+            $this->middlewareData = new ParameterBag();
         }
 
         public function URLStartsWith(string $search): bool
