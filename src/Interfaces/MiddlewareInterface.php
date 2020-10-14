@@ -1,7 +1,7 @@
 <?php
 
 
-    namespace Sourcegr\Framework\Base\Interfaces;
+    namespace Sourcegr\Framework\Interfaces;
 
 
 

@@ -6,9 +6,10 @@
     namespace Sourcegr\Framework\Filesystem\Engines;
 
 
-    use Sourcegr\Framework\Base\Interfaces\FileDriveInterface;
 
-    class FileSystemDrive implements FileDriveInterface
+    use Sourcegr\Framework\Interfaces\Filesystem\FileSystemDriveInterface;
+
+    class FileSystemDrive implements FileSystemDriveInterface
     {
         protected $drivePath;
 

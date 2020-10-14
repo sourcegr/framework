@@ -6,9 +6,11 @@
     namespace Sourcegr\Framework\Base;
 
 
+    use Countable;
+    use IteratorAggregate;
     use Sourcegr\Framework\Base\Helpers\Arr;
 
-    class ParameterBag implements \IteratorAggregate, \Countable
+    class ParameterBag implements IteratorAggregate, Countable
     {
         protected $parameters;
 

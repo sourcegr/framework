@@ -13,9 +13,10 @@
     use Sourcegr\Framework\Http\Request\GETParameterBag;
     use Sourcegr\Framework\Http\Request\POSTParameterBag;
     use Sourcegr\Framework\Http\Request\SERVERParameterBag;
+    use Sourcegr\Framework\Interfaces\Http\RequestInterface;
     use stdClass;
 
-    class HttpRequest
+    class HttpRequest implements RequestInterface
     {
         const METHOD_HEAD = 'HEAD';
         const METHOD_GET = 'GET';

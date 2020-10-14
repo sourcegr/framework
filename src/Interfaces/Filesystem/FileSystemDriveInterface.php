@@ -3,10 +3,10 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Base\Interfaces;
+    namespace Sourcegr\Framework\Interfaces\Filesystem;
 
 
-    interface FileDriveInterface
+    interface FileSystemDriveInterface
     {
         public function getDrivePath(): string;
 

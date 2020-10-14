@@ -6,7 +6,9 @@
     namespace Sourcegr\Framework\App;
 
 
-    class App
+    use Sourcegr\Framework\Interfaces\App\AppInterface;
+
+    class App implements AppInterface
     {
         public $container = null;
 

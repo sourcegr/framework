@@ -6,19 +6,21 @@
     namespace Sourcegr\Framework\Filesystem;
 
 
-    use Sourcegr\Framework\Base\Interfaces\FileDriveInterface;
 
-    class FileSystemManager
+    use Sourcegr\Framework\Interfaces\Filesystem\FileSystemDriveInterface;
+    use Sourcegr\Framework\Interfaces\Filesystem\FileSystemManagerInterface;
+
+    class FileSystemManager implements FileSystemManagerInterface
     {
         protected $drives = [];
 
-        public function attachDrive(string $driveName, FileDriveInterface $drive): FileSystemManager
+        public function attachDrive(string $driveName, FileSystemDriveInterface $drive): FileSystemManagerInterface
         {
             $this->drives[$driveName] = $drive;
             return $this;
         }
 
-        public function drive(string $driveName) : ?FileDriveInterface
+        public function drive(string $driveName) : ?FileSystemDriveInterface
         {
             $drive = $this->drives[$driveName] ?? null;
 
@@ -34,7 +36,7 @@
 //            $this->attachDrive($driveName, $drive);
 //        }
 //
-//        protected function useDrive(string $driveName, array $driveConfig): FileDriveInterface
+//        protected function useDrive(string $driveName, array $driveConfig): FileSystemDriveInterface
 //        {
 //            $driveEngineClass = $driveConfig['engine'];
 //
