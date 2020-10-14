@@ -7,8 +7,9 @@
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
+    use Sourcegr\Framework\Interfaces\Http\Router\RouteInterface;
 
-    class Route
+    class Route implements RouteInterface
     {
         public const DEFAULT_REALM = 'WEB';
         public const IS_POSITIVE_NUMBER = '/^[1-9][0-9]*$/';

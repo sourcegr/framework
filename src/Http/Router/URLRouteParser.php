@@ -6,7 +6,9 @@
     namespace Sourcegr\Framework\Http\Router;
 
 
-    class URLRouteParser
+    use Sourcegr\Framework\Interfaces\Http\Router\URLRouteParserInterface;
+
+    class URLRouteParser implements URLRouteParserInterface
     {
         public $url;
         public $urlSegments;

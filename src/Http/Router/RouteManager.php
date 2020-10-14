@@ -7,7 +7,9 @@
 
 
 
-    class RouteManager
+    use Sourcegr\Framework\Interfaces\Http\Router\RouteManagerInterface;
+
+    class RouteManager implements RouteManagerInterface
     {
         public $routeCollection;
 

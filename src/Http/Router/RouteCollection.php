@@ -6,10 +6,10 @@
     namespace Sourcegr\Framework\Http\Router;
 
 
-    use Sourcegr\Framework\Base\Helpers\Arr;
     use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Interfaces\Http\Router\RouteCollectionInterface;
 
-    class RouteCollection
+    class RouteCollection implements RouteCollectionInterface
     {
         const DEFAULT_REALM = 'WEB';
 

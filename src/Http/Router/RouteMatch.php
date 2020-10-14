@@ -7,8 +7,9 @@
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
+    use Sourcegr\Framework\Interfaces\Http\Router\RouteMatchInterface;
 
-    class RouteMatch
+    class RouteMatch implements RouteMatchInterface
     {
         public $vars = [];
         public $route;
