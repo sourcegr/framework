@@ -7,5 +7,5 @@
 
     interface MiddlewareInterface
     {
-        public function handle($request, callable $next);
+        public function handle($app, callable $next);
     }

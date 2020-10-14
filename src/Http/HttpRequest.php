@@ -13,6 +13,7 @@
     use Sourcegr\Framework\Http\Request\GETParameterBag;
     use Sourcegr\Framework\Http\Request\POSTParameterBag;
     use Sourcegr\Framework\Http\Request\SERVERParameterBag;
+    use stdClass;
 
     class HttpRequest
     {
@@ -31,10 +32,22 @@
         protected $fileBag;
         protected $serverBag;
 
-        protected $middlewareData;
+        public $data;
 
+        /**
+         * @var string $url
+         */
         public $url = null;
+
+        /**
+         * @var string $method
+         */
         public $method = null;
+
+        /**
+         * @var string $realm
+         */
+        public $realm = null;
 
         public static function fromHTTP(): HttpRequest
         {
@@ -55,7 +68,7 @@
             );
             $this->serverBag = new SERVERParameterBag($server);
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
-            $this->middlewareData = new ParameterBag();
+            $this->data = new StdClass();
         }
 
         public function URLStartsWith(string $search): bool

@@ -6,6 +6,7 @@
     namespace Sourcegr\Framework\Http\Router;
 
 
+
     class RouteManager
     {
         public $routeCollection;
@@ -21,11 +22,12 @@
             return $this;
         }
 
-        public function matchRoute(array $params)
+        public function matchRoute($request)
         {
-            $url = $params['url'] ?? null;
-            $realm = $params['realm'] ?? null;
-            $method = $params['method'] ?? null;
+            $request = (Object) $request;
+            $url = $request->url ?? null;
+            $realm = $request->realm ?? null;
+            $method = $request->method ?? null;
 
             if (is_null($url) ||is_null($realm) ||is_null($method)) {
                 throw new \Exception('url, realm and method should be provided as an associative array');

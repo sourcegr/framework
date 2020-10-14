@@ -10,9 +10,11 @@
 
     class NativeSessionDriver extends SessionHandler
     {
+        protected $config;
 
-        private $app;
-        private $config;
+        public function getID() {
+            return session_id();
+        }
 
         public function clear($init = null)
         {
@@ -21,9 +23,8 @@
             return $this;
         }
 
-        public function __construct($app, $config)
+        public function __construct($config)
         {
-            $this->app = $app;
             $this->config = $config;
             $this->setCookieParams();
         }
@@ -56,7 +57,6 @@
                     $this->config['http_only'] ?? $existing['http_only'],
                 );
                 session_start();
-//                var_dump( $_SERVER);
             }
         }
     }

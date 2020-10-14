@@ -13,26 +13,32 @@
 
         protected $handler;
 
-        public function __construct($app, $handler)
+        public function getID()
         {
-            $app->registerShutdownCallback(
-                function () use ($handler) {
-                    $newFlash = $handler->get(self::FLASH_NEW);
-                    $handler->set(self::FLASH_OLD, $newFlash);
-                    $handler->set(self::FLASH_NEW, []);
-                }
-            );
+            return $this->handler->getID();
+        }
+        public function get($key)
+        {
+            return $this->handler->get($key);
+        }
+
+        public function __construct($handler)
+        {
             $this->handler = $handler;
+        }
+
+        public function ageSession() {
+            $newFlash = $this->handler->get(self::FLASH_NEW);
+            $this->handler->set(self::FLASH_OLD, $newFlash);
+            $this->handler->set(self::FLASH_NEW, []);
         }
 
         public function clear()
         {
-            $this->handler->clear(
-                [
+            $this->handler->clear([
                     self::FLASH_OLD => [],
                     self::FLASH_NEW => [],
-                ]
-            );
+                ]);
 
             return $this;
         }

@@ -50,15 +50,13 @@
          *
          * @return $this
          */
-        public function add($parameters, $value = null, $mustExist = false): ParameterBag
+        public function add($parametersOrKey, $value = null): ParameterBag
         {
-            if (!Arr::is($parameters)) {
-                $parameters = [$parameters => $value];
+            if (!Arr::is($parametersOrKey)) {
+                $parameters = [$parametersOrKey => $value];
             }
 
-            if (!$mustExist || ($mustExist && count($parameters))) {
-                $this->parameters = Arr::arrayReplace($this->parameters, $parameters);
-            }
+            $this->parameters = Arr::arrayReplace($this->parameters, $parametersOrKey);
 
             return $this;
         }
@@ -69,8 +67,12 @@
          *
          * @return $this
          */
-        public function addIfExists($parameters = [], $value = null) {
-            return $this->add($parameters, $value, true);
+        public function setIfExists($key, $value)
+        {
+            if ($this->has($key)) {
+                $this->set($key, $value);
+            }
+            return $this;
         }
 
         /**

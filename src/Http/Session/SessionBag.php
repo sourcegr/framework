@@ -28,14 +28,14 @@
         protected function readFromHandler()
         {
             if ($data = $this->handler->load($this->getId())) {
-            $data = @unserialize($data);
+                $data = @unserialize($data);
 
-            if ($data !== false && ! is_null($data) && Arr::isArray($data)) {
-                return $data;
+                if ($data !== false && !is_null($data) && is_array($data)) {
+                    return $data;
+                }
             }
-        }
 
-        return [];
+            return [];
         }
 
         /**

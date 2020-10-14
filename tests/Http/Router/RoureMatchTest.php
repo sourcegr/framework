@@ -57,7 +57,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testDontMatchWithMoreParts()
@@ -76,7 +76,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testDontMatchOnOptionalWithWayMoreParts()
@@ -95,7 +95,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testDontMatchOnOptionalWithLessParts()
@@ -114,7 +114,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testMatchRequiredParameter()
@@ -137,7 +137,7 @@
             $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');
             $this->assertArrayHasKey('action', $actual->vars);
             $this->assertEquals('list', $actual->vars['action']);
-//            $this->assertEquals(404, $actual->status_code, 'RouteMatch should be returned');
+//            $this->assertEquals(404, $actual->statusCode, 'RouteMatch should be returned');
         }
 
         public function testMatchOptionalParameterNoWildcard()
@@ -246,7 +246,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testMatchWithWhere()
@@ -293,7 +293,7 @@
             ]);
 
             $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->status_code, '404 should be returned');
+            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testMatchWithPredicate()

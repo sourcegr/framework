@@ -23,6 +23,7 @@
         protected $callback;
         protected $middlewares = [];
 
+
         public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
         {
             $this->realm = $realm ?? self::DEFAULT_REALM;
@@ -63,6 +64,10 @@
             $middlewares = Arr::ensureArray($middlewares);
             $this->middlewares = Arr::merge($this->middlewares, $middlewares);
             return $this;
+        }
+        public function getMiddleware(): array
+        {
+            return $this->middlewares;
         }
 
         public function setRealm(string $realm): Route
