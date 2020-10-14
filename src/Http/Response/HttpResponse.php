@@ -3,7 +3,7 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Http;
+    namespace Sourcegr\Framework\Http\Response;
 
 
     use Sourcegr\Framework\Http\Response\HeaderBag;
@@ -24,16 +24,6 @@
             $this->status = $status;
             $this->textContent = $textContent;
         }
-
-//        public static function __callStatic($name, $arguments)
-//        {
-//            $instance = new static();
-//            if (method_exists($instance, $name)) {
-//                $instance->$name(...$arguments);
-//                return $instance;
-//            }
-//            throw new \Exception('No such method');
-//        }
 
         public function redirect($to, $code=301)
         {

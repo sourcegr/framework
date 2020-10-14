@@ -3,16 +3,10 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Http;
+    namespace Sourcegr\Framework\Http\Request;
 
 
-    use Sourcegr\Framework\Base\ParameterBag;
-    use Sourcegr\Framework\Http\Request\COOKIEParameterBag;
     use Sourcegr\Framework\Http\Request\File\UploadedFile;
-    use Sourcegr\Framework\Http\Request\FILEParameterBag;
-    use Sourcegr\Framework\Http\Request\GETParameterBag;
-    use Sourcegr\Framework\Http\Request\POSTParameterBag;
-    use Sourcegr\Framework\Http\Request\SERVERParameterBag;
     use Sourcegr\Framework\Interfaces\Http\RequestInterface;
     use stdClass;
 
