@@ -6,8 +6,6 @@
     namespace Sourcegr\Framework\Http\Response;
 
 
-    use Sourcegr\Framework\Http\Response\HeaderBag;
-
     class HttpResponse
     {
         public $headers = null;
@@ -15,7 +13,6 @@
 
         public $textContent = '';
         public $status = '';
-
 
 
         public function __construct(string $textContent, int $status, array $headers = [])

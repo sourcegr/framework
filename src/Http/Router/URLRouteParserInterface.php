@@ -3,10 +3,9 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Interfaces\Http\Router;
+    namespace Sourcegr\Framework\Http\Router;
 
 
     interface URLRouteParserInterface
     {
-
     }

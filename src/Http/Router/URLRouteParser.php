@@ -6,8 +6,6 @@
     namespace Sourcegr\Framework\Http\Router;
 
 
-    use Sourcegr\Framework\Interfaces\Http\Router\URLRouteParserInterface;
-
     class URLRouteParser implements URLRouteParserInterface
     {
         public $url;
@@ -21,9 +19,9 @@
             $this->urlSegmentsLength = count($this->urlSegments);
         }
 
-        public function matches(Route $route)
+        public function matches(Route $route, PredicateCompilerInterface $predicateCompiler)
         {
-            $matcher = new RouteMatch($route, $this);
+            $matcher = new RouteMatch($route, $this, $predicateCompiler);
             return $matcher->matches();
         }
     }

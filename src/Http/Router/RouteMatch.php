@@ -7,26 +7,30 @@
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
-    use Sourcegr\Framework\Interfaces\Http\Router\RouteMatchInterface;
+
 
     class RouteMatch implements RouteMatchInterface
     {
+        /** @var PredicateCompiler */
         public $vars = [];
         public $route;
 
         protected $parser;
+        protected $predicateCompiler;
 
         protected $checkMap = [];
 
         /**
          * UrlRouteMatcher constructor.
          *
-         * @param Route          $route
-         * @param URLRouteParser $parser
+         * @param Route                           $route
+         * @param URLRouteParser|null             $parser
+         * @param PredicateCompilerInterface|null $predicateCompiler
          */
-        public function __construct(Route $route, URLRouteParser $parser = null)
+        public function __construct(Route $route, URLRouteParser $parser = null, PredicateCompilerInterface $predicateCompiler = null)
         {
             $this->route = $route;
+            $this->predicateCompiler = $predicateCompiler;
             $this->parser = $parser;
         }
 
@@ -55,6 +59,7 @@
                 return null;
             }
 
+
             $countDiff = $routeSegmentsLength - $urlSegmentsLength;
 
             if ($routeHasOptional){
@@ -71,6 +76,7 @@
 
             foreach ($routeSegments as $index => $segment) {
                 # we first check to see if there is a required variable
+
                 if (strncmp($segment, '#', 1) === 0) {
                     $segment = substr($segment, 1);
 
@@ -78,6 +84,7 @@
                     $this->checkMap[$index] = $urlSegments[$index];
                     continue;
                 }
+
 
                 #if not, we are looking for an optional variable
                 if (strncmp($segment, '?', 1) === 0) {
@@ -91,28 +98,22 @@
                         $this->vars[$segment] = implode('/', $rest);
                         break;
                     } else {
+
                         if ($urlSegmentsLength < $routeSegmentsLength) {
                             $this->vars[$segment] = null;
                         } else {
                             $this->checkMap[$index] = $urlSegments[$index];
                             $this->vars[$segment] = $urlSegments[$index];
                         }
-
-
                         continue;
-
-                        # contact/?rest
-                        #  = contact/
-                        #  = contact/create
-//                        if ($routeSegmentsLength  $urlSegmentsLength)
                     }
+
                 }
 
                 # otherwise, no variable exists and we set the
                 $this->checkMap[$index] = $segment;
             }
 
-//            var_dump([$this->checkMap , $urlSegments]);
             // if the resulting array is the same, we have a match
             if ($this->checkMap === $urlSegments) {
                 $result = true;
@@ -127,7 +128,7 @@
                 $predicates = $this->route->getCompiledParam('predicates');
                 if (count($predicates)) {
                     foreach ($predicates as $predicate) {
-                        $result = $result && $predicate($this);
+                        $result = $result && $this->predicateCompiler->runPredicate($predicate, $this);
                     }
                 }
 

@@ -6,9 +6,9 @@
     namespace Sourcegr\Framework\Http\Session\Drivers;
 
 
-    use Sourcegr\Framework\Http\Session\SessionHandler;
+    use Sourcegr\Framework\Http\Session\SessionManager;
 
-    class NativeSessionDriver extends SessionHandler
+    class NativeSessionDriver extends SessionManager
     {
         protected $config;
 
@@ -42,21 +42,5 @@
         public function regenerateID()
         {
             session_regenerate_id();
-        }
-
-        public function setCookieParams()
-        {
-            if ($this->config['autostart']) {
-                session_name($this->config['cookie']);
-                $existing = session_get_cookie_params();
-                session_set_cookie_params(
-                    $this->config['lifetime'] * 60,
-                    $this->config['path'] ?? $existing['path'],
-                    $this->config['domain'] ?? $existing['domain'],
-                    $this->config['secure'] ?? $existing['secure'],
-                    $this->config['http_only'] ?? $existing['http_only'],
-                );
-                session_start();
-            }
         }
     }

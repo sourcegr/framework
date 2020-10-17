@@ -7,14 +7,13 @@
 
 
     use Sourcegr\Framework\Base\Helpers\Arr;
-    use Sourcegr\Framework\Interfaces\Http\Router\RouteInterface;
 
     class Route implements RouteInterface
     {
         public const DEFAULT_REALM = 'WEB';
         public const IS_POSITIVE_NUMBER = '/^[1-9][0-9]*$/';
 
-        protected $url;
+        protected $url = [];
         protected $prefix;
         protected $realm = self::DEFAULT_REALM;
         protected $method;
@@ -28,8 +27,9 @@
         public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
         {
             $this->realm = $realm ?? self::DEFAULT_REALM;
-            $this->method = strtoupper($method);
-            $this->url = trim($url, "/");
+            $method = is_array($method) ? $method : [$method];
+            $this->method = array_map('strtoupper', $method);
+            $this->url = trim($url, '/');
             $this->callback = $callback;
 
             if ($predicate !== null) {
@@ -66,6 +66,7 @@
             $this->middlewares = Arr::merge($this->middlewares, $middlewares);
             return $this;
         }
+
         public function getMiddleware(): array
         {
             return $this->middlewares;

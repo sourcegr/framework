@@ -3,13 +3,11 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Filesystem\Engines;
+    namespace Sourcegr\Framework\Filesystem\Engine;
 
 
 
-    use Sourcegr\Framework\Interfaces\Filesystem\FileSystemDriveInterface;
-
-    class FileSystemDrive implements FileSystemDriveInterface
+    class Local implements FileSystemDriveInterface
     {
         protected $drivePath;
 
@@ -53,14 +51,12 @@
 
         public function saveFile(string $filenameWithPath, string $toFilename, string $onDirectory = ''): bool
         {
-
             return @copy($filenameWithPath, $this->getRealPath($onDirectory) . $toFilename);
         }
 
         public function deleteFile(string $filename, string $onDirectory = ''): bool
         {
-
-            return @unlink($this->getRealPath($onDirectory).$filename);
+            return @unlink($this->getRealPath($onDirectory) . $filename);
         }
 
         public function createDirectory(string $directory, bool $recursive = false, int $mode = 0755): bool
@@ -75,7 +71,7 @@
             return array_values(array_filter(glob($this->getRealPath($directory) . '*'), 'is_file'));
         }
 
-        public function getDirectoryList(string $directory = ''): array
+            public function getDirectoryList(string $directory = ''): array
         {
             return array_values(array_filter(glob($this->getRealPath($directory) . '*'), 'is_dir'));
         }

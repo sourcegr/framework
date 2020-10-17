@@ -70,10 +70,11 @@
             $pureInit = static::getPureArray($init);
             $pureWith = static::getPureArray($with);
 
-            if ($pureWith === null) {
+            if (is_null($pureWith)) {
                 return $pureInit;
             }
-            if ($pureInit === null) {
+
+            if (is_null($pureInit)) {
                 return null;
             }
 

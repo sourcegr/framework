@@ -6,9 +6,10 @@
     namespace Sourcegr\Framework\Http\Request;
 
 
+    use Sourcegr\Framework\Base\Helpers\Helpers;
+    use Sourcegr\Framework\Base\ParameterBag;
     use Sourcegr\Framework\Http\Request\File\UploadedFile;
-    use Sourcegr\Framework\Interfaces\Http\RequestInterface;
-    use stdClass;
+
 
     class HttpRequest implements RequestInterface
     {
@@ -21,13 +22,11 @@
         const METHOD_OPTIONS = 'OPTIONS';
 
 
-        protected $getBag;
-        protected $postBag;
+        protected $varsBag;
         protected $cookieBag;
         protected $fileBag;
         protected $serverBag;
-
-        public $data;
+        protected $headerBag;
 
         /**
          * @var string $url
@@ -44,7 +43,18 @@
          */
         public $realm = null;
 
-        public static function fromHTTP(): HttpRequest
+        /**
+         * @param string $realm
+         *
+         * @return RequestInterface
+         */
+        public function setRealm(string $realm): RequestInterface
+        {
+            $this->realm = $realm;
+            return $this;
+        }
+
+        public static function fromHTTP(): RequestInterface
         {
             $url = explode('?', $_SERVER['REQUEST_URI'])[0];
             $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
@@ -52,43 +62,63 @@
         }
 
 
-        public function __construct(string $url='', array $get = [], array $post = [], array $cookie = [], array $files = [], array $server = [])
-        {
+        public function __construct(
+            string $url = '',
+            array $get = [],
+            array $post = [],
+            array $cookie = [],
+            array $files = [],
+            array $server = []
+        ) {
             $this->url = trim($url, "/");
-            $this->getBag = new GETParameterBag($get);
-            $this->postBag = new POSTParameterBag($post);
+            $this->varsBag = [
+                static::METHOD_GET => new ParameterBag($get),
+                static::METHOD_POST => new ParameterBag($post)
+            ];
+
             $this->cookieBag = new COOKIEParameterBag($cookie);
-            $this->fileBag = new FILEParameterBag(
-                $this->createFileBag($files)
-            );
+            $this->fileBag = new FILEParameterBag($this->createFileBag($files));
             $this->serverBag = new SERVERParameterBag($server);
+            $this->headerBag = new ParameterBag(Helpers::getRequestHeaders());
+
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
-            $this->data = new StdClass();
         }
 
-        public function URLStartsWith(string $search): bool
+
+        public function expectsJson(): bool
         {
-            return strpos($search, $this->url) === 0;
-        }
-
-        public function expectsJson():bool {
-            $accepts = explode(',',  ($this->serverBag->get('HTTP_ACCEPT') ?? ''));
+            $accepts = explode(',', ($this->serverBag->get('HTTP_ACCEPT') ?? ''));
             return $accepts[0] === 'application/json';
         }
+
 
         public function getMethod(): string
         {
             return $this->method;
         }
 
-        public function get(string $var, string $type = null) : ?string
+        public function getHeader(string $header): ?string
         {
-            if (!$type) {
-                $type = 'POST';
-            }
+            return $this->headerBag->get($header) ?? null;
         }
 
-        public function files(): array
+
+        public function get(string $key, string $type = null): ?string
+        {
+            if (!$type) {
+                if ($this->method === static::METHOD_GET || $this->method === static::METHOD_POST) {
+                    $type = $this->method;
+                } else {
+                    $type = static::METHOD_GET;
+                }
+            }
+//            dd($this->varsBag[$type]->get('sadfasdf'));
+
+            return $this->varsBag[$type] ? ($this->varsBag[$type]->get($key) ?? null) : null;
+        }
+
+
+        public function filesArray(): array
         {
             return $this->fileBag->values();
         }
@@ -116,5 +146,10 @@
             }
 
             return $normalized;
+        }
+
+        public function getSession()
+        {
+            // TODO: Implement getSession() method.
         }
     }

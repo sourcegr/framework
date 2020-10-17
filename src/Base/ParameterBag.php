@@ -20,10 +20,12 @@
         }
 
 
-        public function clear() {
+        public function clear()
+        {
             $this->parameters = [];
             return $this;
         }
+
         public function keys()
         {
             return Arr::keys($this->parameters);
@@ -46,16 +48,15 @@
 
 
         /**
-         * @param mixed $parameters
-         * @param null  $value
-         * @param false $mustExist
+         * @param      $parametersOrKey
+         * @param null $value
          *
          * @return $this
          */
         public function add($parametersOrKey, $value = null): ParameterBag
         {
             if (!Arr::is($parametersOrKey)) {
-                $parameters = [$parametersOrKey => $value];
+                $parametersOrKey = [$parametersOrKey => $value];
             }
 
             $this->parameters = Arr::arrayReplace($this->parameters, $parametersOrKey);
@@ -64,8 +65,8 @@
         }
 
         /**
-         * @param array $parameters
-         * @param null  $value
+         * @param      $key
+         * @param null $value
          *
          * @return $this
          */
@@ -99,12 +100,12 @@
             return $this;
         }
 
-        public function get($key = null)
+        public function get($key = null, $default=null)
         {
             if (!$key) {
                 return $this->parameters;
             }
-            $ret = $this->parameters[$key] ?? null;
+            $ret = $this->parameters[$key] ?? $default;
             return $ret;
         }
 

@@ -7,32 +7,33 @@
 
 
 
-    use Sourcegr\Framework\Interfaces\Http\Router\RouteManagerInterface;
+    use Sourcegr\Framework\Http\Request\RequestInterface;
 
     class RouteManager implements RouteManagerInterface
     {
         public $routeCollection;
+        protected $request;
+        protected $predicateCompiler;
 
-        public function __construct()
+        public function __construct(RequestInterface $request, PredicateCompilerInterface $predicateCompiler = null)
         {
             $this->routeCollection = new RouteCollection();
+            $this->request = $request;
+            $this->predicateCompiler = $predicateCompiler ?? (new PredicateCompiler());
         }
 
-        public function loadRoutes(string $realm, callable $callback)
+        public function matchRoute(callable $callback)
         {
-            $this->routeCollection->setRealm($realm, $callback);
-            return $this;
-        }
+            $request = (Object) $this->request;
 
-        public function matchRoute($request)
-        {
-            $request = (Object) $request;
-            $url = $request->url ?? null;
-            $realm = $request->realm ?? null;
+            $url = $request->url ?? '/';
+            $realm = $request->realm ?? '';
             $method = $request->method ?? null;
 
+            $this->routeCollection->setRealm($realm, $callback);
+
             if (is_null($url) ||is_null($realm) ||is_null($method)) {
-                throw new \Exception('url, realm and method should be provided as an associative array');
+                throw new \Exception('url, realm and method should be provided in the Request object');
             }
             $activeRoutes = $this->routeCollection->filterRoutes($realm, $method);
 
@@ -48,20 +49,20 @@
             /** @var Route $route */
             foreach ($exactRoutes as $route) {
                 if ($route->getCompiledParam('url') === $url) {
-                    $matcher = new RouteMatch($route, null);
+                    $matcher = new RouteMatch($route, null, null);
                     return $matcher;
                 }
             }
 
             # search parameterized
-            # from now on, tthe $match is instance of RouteMatch
+            # from now on, the $match is instance of RouteMatch
             # and we will return it as-is
             $matched = null;
             $urlParser = new URLRouteParser($url);
 
 
             foreach ($parameterRoutes as $route) {
-                if ($matched = $urlParser->matches($route)) {
+                if ($matched = $urlParser->matches($route, $this->predicateCompiler)) {
                     break;
                 }
             }

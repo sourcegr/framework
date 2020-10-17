@@ -7,14 +7,14 @@
 
 
     use Sourcegr\Framework\Http\Boom;
-    use Sourcegr\Framework\Interfaces\Http\Router\RouteCollectionInterface;
+    use Sourcegr\Framework\Http\BoomException;
+    use Sourcegr\Framework\Http\Response\HTTPResponseCodes;
 
     class RouteCollection implements RouteCollectionInterface
     {
-        const DEFAULT_REALM = 'WEB';
+        public const DEFAULT_REALM = 'WEB';
 
         protected $routes = [];
-        protected $fourOhFour = null;
         protected $defaultRealm = self::DEFAULT_REALM;
 
         protected function callRouteMethod(string $memberMethod, string $param, callable $closure = null)
@@ -42,7 +42,7 @@
             $matched = [];
 
             foreach ($this->routes as $route) {
-                if ($realm === $route->getCompiledParam('realm') && $method === $route->getCompiledParam('method')) {
+                if ($realm === $route->getCompiledParam('realm') && in_array($method, $route->getCompiledParam('method'))) {
                     $matched[] = $route;
                 }
             }
@@ -72,13 +72,7 @@
 
         public function getFourOhFour()
         {
-            $result = $this->fourOhFour ;
-            if ($result === null) {
-                $boom = new Boom();
-                return $boom->send404();
-            }
-
-            return $result;
+            throw new BoomException(new Boom(HTTPResponseCodes::HTTP_NOT_FOUND));
         }
 
         public function __construct(?string $defaultRealm = null)
@@ -86,8 +80,8 @@
             $this->defaultRealm = $defaultRealm ?? self::DEFAULT_REALM;
         }
 
-        protected function addRoute(
-            string $method,
+        public function addRoute(
+            array $method,
             string $url,
             $callback,
             $predicate = null,
@@ -134,27 +128,27 @@
         // methods and basic
         public function GET($url, $callback)
         {
-            return $this->addRoute('GET', $url, $callback);
+            return $this->addRoute(['GET'], $url, $callback);
         }
 
         public function POST($url, $callback)
         {
-            return $this->addRoute('POST', $url, $callback);
+            return $this->addRoute(['POST'], $url, $callback);
         }
 
         public function PUT($url, $callback)
         {
-            return $this->addRoute('PUT', $url, $callback);
+            return $this->addRoute(['PUT'], $url, $callback);
         }
 
         public function PATCH($url, $callback)
         {
-            return $this->addRoute('PATCH', $url, $callback);
+            return $this->addRoute(['PATCH'], $url, $callback);
         }
 
         public function DELETE($url, $callback)
         {
-            return $this->addRoute('DELETE', $url, $callback);
+            return $this->addRoute(['DELETE'], $url, $callback);
         }
 
         /*

@@ -3,7 +3,7 @@
     declare(strict_types=1);
 
 
-    namespace Sourcegr\Framework\Interfaces\Filesystem;
+    namespace Sourcegr\Framework\Filesystem\Engine;
 
 
     interface FileSystemDriveInterface

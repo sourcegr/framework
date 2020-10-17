@@ -8,12 +8,19 @@
     use ArrayAccess;
     use Closure;
     use Exception;
+    use LogicException;
     use ReflectionClass;
     use ReflectionException;
-    use ReflectionNamedType;
     use ReflectionParameter;
+    use Sourcegr\Framework\App\Container\BindingResolutionException;
+    use Sourcegr\Framework\App\Container\BoundMethod;
+    use Sourcegr\Framework\App\Container\ContextualBindingBuilder;
+    use Sourcegr\Framework\App\Container\EntryNotFoundException;
+    use Sourcegr\Framework\App\Container\RewindableGenerator;
+    use Sourcegr\Framework\App\Container\Util;
 
-    class Container implements ArrayAccess
+
+    class Container implements ArrayAccess, ContainerInterface
     {
         /**
          * The current globally available container (if any).
@@ -39,7 +46,7 @@
         /**
          * The container's method bindings.
          *
-         * @var \Closure[]
+         * @var Closure[]
          */
         protected $methodBindings = [];
 
@@ -109,14 +116,14 @@
         /**
          * All of the global resolving callbacks.
          *
-         * @var \Closure[]
+         * @var Closure[]
          */
         protected $globalResolvingCallbacks = [];
 
         /**
          * All of the global after resolving callbacks.
          *
-         * @var \Closure[]
+         * @var Closure[]
          */
         protected $globalAfterResolvingCallbacks = [];
 
@@ -197,11 +204,13 @@
         /**
          * Register a binding with the container.
          *
-         * @param string               $abstract
-         * @param \Closure|string|null $concrete
-         * @param bool                 $shared
+         * @param string              $abstract
+         * @param Closure|string|null $concrete
+         * @param bool                $shared
          *
          * @return void
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function bind($abstract, $concrete = null, $shared = false)
         {
@@ -235,13 +244,24 @@
             }
         }
 
+        public function when($concrete)
+        {
+            $aliases = [];
+
+            foreach (Util::arrayWrap($concrete) as $c) {
+                $aliases[] = $this->getAlias($c);
+            }
+
+            return new ContextualBindingBuilder($this, $aliases);
+        }
+
         /**
          * Get the Closure to be used when building a type.
          *
          * @param string $abstract
          * @param string $concrete
          *
-         * @return \Closure
+         * @return Closure
          */
         protected function getClosure($abstract, $concrete)
         {
@@ -272,7 +292,7 @@
          * Bind a callback to resolve with Container::call.
          *
          * @param array|string $method
-         * @param \Closure     $callback
+         * @param Closure      $callback
          *
          * @return void
          */
@@ -313,9 +333,9 @@
         /**
          * Add a contextual binding to the container.
          *
-         * @param string          $concrete
-         * @param string          $abstract
-         * @param \Closure|string $implementation
+         * @param string         $concrete
+         * @param string         $abstract
+         * @param Closure|string $implementation
          *
          * @return void
          */
@@ -327,11 +347,13 @@
         /**
          * Register a binding if it hasn't already been registered.
          *
-         * @param string               $abstract
-         * @param \Closure|string|null $concrete
-         * @param bool                 $shared
+         * @param string              $abstract
+         * @param Closure|string|null $concrete
+         * @param bool                $shared
          *
          * @return void
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function bindIf($abstract, $concrete = null, $shared = false)
         {
@@ -343,10 +365,12 @@
         /**
          * Register a shared binding in the container.
          *
-         * @param string               $abstract
-         * @param \Closure|string|null $concrete
+         * @param string              $abstract
+         * @param Closure|string|null $concrete
          *
          * @return void
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function singleton($abstract, $concrete = null)
         {
@@ -356,10 +380,12 @@
         /**
          * Register a shared binding if it hasn't already been registered.
          *
-         * @param string               $abstract
-         * @param \Closure|string|null $concrete
+         * @param string              $abstract
+         * @param Closure|string|null $concrete
          *
          * @return void
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function singletonIf($abstract, $concrete = null)
         {
@@ -371,12 +397,12 @@
         /**
          * "Extend" an abstract type in the container.
          *
-         * @param string   $abstract
-         * @param \Closure $closure
+         * @param string  $abstract
+         * @param Closure $closure
          *
          * @return void
          *
-         * @throws \InvalidArgumentException
+         * @throws \InvalidArgumentException|BindingResolutionException|ReflectionException
          */
         public function extend($abstract, Closure $closure)
         {
@@ -402,6 +428,7 @@
          * @param mixed  $instance
          *
          * @return mixed
+         * @throws BindingResolutionException|ReflectionException
          */
         public function instance($abstract, $instance)
         {
@@ -496,7 +523,7 @@
          *
          * @return void
          *
-         * @throws \LogicException
+         * @throws LogicException
          */
         public function alias($abstract, $alias)
         {
@@ -512,10 +539,11 @@
         /**
          * Bind a new callback to an abstract's rebind event.
          *
-         * @param string   $abstract
-         * @param \Closure $callback
+         * @param string  $abstract
+         * @param Closure $callback
          *
          * @return mixed
+         * @throws BindingResolutionException|ReflectionException
          */
         public function rebinding($abstract, Closure $callback)
         {
@@ -534,6 +562,7 @@
          * @param string $method
          *
          * @return mixed
+         * @throws BindingResolutionException|ReflectionException
          */
         public function refresh($abstract, $target, $method)
         {
@@ -549,6 +578,7 @@
          * @param string $abstract
          *
          * @return void
+         * @throws BindingResolutionException|ReflectionException
          */
         protected function rebound($abstract)
         {
@@ -574,10 +604,10 @@
         /**
          * Wrap the given closure such that its dependencies will be injected when executed.
          *
-         * @param \Closure $callback
-         * @param array    $parameters
+         * @param Closure $callback
+         * @param array   $parameters
          *
-         * @return \Closure
+         * @return Closure
          */
         public function wrap(Closure $callback, array $parameters = [])
         {
@@ -595,7 +625,7 @@
          *
          * @return mixed
          *
-         * @throws \InvalidArgumentException
+         * @throws \InvalidArgumentException|ReflectionException
          */
         public function call($callback, array $parameters = [], $defaultMethod = null)
         {
@@ -607,7 +637,7 @@
          *
          * @param string $abstract
          *
-         * @return \Closure
+         * @return Closure
          */
         public function factory($abstract)
         {
@@ -624,7 +654,7 @@
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         public function makeWith($abstract, array $parameters = [])
         {
@@ -639,7 +669,7 @@
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         public function make($abstract, array $parameters = [])
         {
@@ -671,7 +701,7 @@
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         protected function resolve($abstract, $parameters = [], $raiseEvents = true)
         {
@@ -755,7 +785,7 @@
          *
          * @param string $abstract
          *
-         * @return \Closure|string|array|null
+         * @return Closure|string|array|null
          */
         protected function getContextualConcrete($abstract)
         {
@@ -782,7 +812,7 @@
          *
          * @param string $abstract
          *
-         * @return \Closure|string|null
+         * @return Closure|string|null
          */
         protected function findInContextualBindings($abstract)
         {
@@ -805,11 +835,11 @@
         /**
          * Instantiate a concrete instance of the given type.
          *
-         * @param \Closure|string $concrete
+         * @param Closure|string $concrete
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         public function build($concrete)
         {
@@ -843,7 +873,7 @@
             if (is_null($constructor)) {
                 array_pop($this->buildStack);
 
-                return new $concrete;
+                return new $concrete();
             }
 
             $dependencies = $constructor->getParameters();
@@ -867,11 +897,11 @@
         /**
          * Resolve all of the dependencies from the ReflectionParameters.
          *
-         * @param \ReflectionParameter[] $dependencies
+         * @param ReflectionParameter[] $dependencies
          *
          * @return array
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         protected function resolveDependencies(array $dependencies)
         {
@@ -890,7 +920,7 @@
                 // If the class is null, it means the dependency is a string or some other
                 // primitive type which we can not resolve since it is not a class and
                 // we will just bomb out with an error since we have no-where to go.
-                $result = is_null(static::getParameterClassName($dependency)) ? $this->resolvePrimitive($dependency) : $this->resolveClass($dependency);
+                $result = is_null(Util::getParameterClassName($dependency)) ? $this->resolvePrimitive($dependency) : $this->resolveClass($dependency);
 
                 if ($dependency->isVariadic()) {
                     $results = array_merge($results, $result);
@@ -905,7 +935,7 @@
         /**
          * Determine if the given dependency has a parameter override.
          *
-         * @param \ReflectionParameter $dependency
+         * @param ReflectionParameter $dependency
          *
          * @return bool
          */
@@ -918,7 +948,7 @@
         /**
          * Get a parameter override for a dependency.
          *
-         * @param \ReflectionParameter $dependency
+         * @param ReflectionParameter $dependency
          *
          * @return mixed
          */
@@ -940,11 +970,11 @@
         /**
          * Resolve a non-class hinted primitive dependency.
          *
-         * @param \ReflectionParameter $parameter
+         * @param ReflectionParameter $parameter
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         protected function resolvePrimitive(ReflectionParameter $parameter)
         {
@@ -962,16 +992,16 @@
         /**
          * Resolve a class based dependency from the container.
          *
-         * @param \ReflectionParameter $parameter
+         * @param ReflectionParameter $parameter
          *
          * @return mixed
          *
-         * @throws BindingResolutionException
+         * @throws BindingResolutionException|ReflectionException
          */
         protected function resolveClass(ReflectionParameter $parameter)
         {
             try {
-                return $parameter->isVariadic() ? $this->resolveVariadicClass($parameter) : $this->make(static::getParameterClassName($parameter));
+                return $parameter->isVariadic() ? $this->resolveVariadicClass($parameter) : $this->make(Util::getParameterClassName($parameter));
             }
 
                 // If we can not resolve the class instance, we will check to see if the value
@@ -993,13 +1023,15 @@
         /**
          * Resolve a class based variadic dependency from the container.
          *
-         * @param \ReflectionParameter $parameter
+         * @param ReflectionParameter $parameter
          *
          * @return mixed
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         protected function resolveVariadicClass(ReflectionParameter $parameter)
         {
-            $className = static::getParameterClassName($parameter);
+            $className = Util::getParameterClassName($parameter);
 
             $abstract = $this->getAlias($className);
 
@@ -1038,7 +1070,7 @@
         /**
          * Throw an exception for an unresolvable primitive.
          *
-         * @param \ReflectionParameter $parameter
+         * @param ReflectionParameter $parameter
          *
          * @return void
          *
@@ -1054,8 +1086,8 @@
         /**
          * Register a new resolving callback.
          *
-         * @param \Closure|string $abstract
-         * @param \Closure|null   $callback
+         * @param Closure|string $abstract
+         * @param Closure|null   $callback
          *
          * @return void
          */
@@ -1075,8 +1107,8 @@
         /**
          * Register a new after resolving callback for all types.
          *
-         * @param \Closure|string $abstract
-         * @param \Closure|null   $callback
+         * @param Closure|string $abstract
+         * @param Closure|null   $callback
          *
          * @return void
          */
@@ -1266,7 +1298,7 @@
         public static function getInstance()
         {
             if (is_null(static::$instance)) {
-                static::$instance = new static;
+                static::$instance = new static();
             }
 
             return static::$instance;
@@ -1275,11 +1307,11 @@
         /**
          * Set the shared instance of the container.
          *
-         * @param \Illuminate\Contracts\Container\Container|null $container
+         * @param ContainerInterface|null $container
          *
-         * @return \Illuminate\Contracts\Container\Container|static
+         * @return ContainerInterface|static
          */
-        public static function setInstance(ContainerContract $container = null)
+        public static function setInstance(ContainerInterface $container = null)
         {
             return static::$instance = $container;
         }
@@ -1302,6 +1334,8 @@
          * @param string $key
          *
          * @return mixed
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function offsetGet($key)
         {
@@ -1315,6 +1349,8 @@
          * @param mixed  $value
          *
          * @return void
+         * @throws BindingResolutionException
+         * @throws ReflectionException
          */
         public function offsetSet($key, $value)
         {
@@ -1359,29 +1395,5 @@
         public function __set($key, $value)
         {
             $this[$key] = $value;
-        }
-
-
-        public static function getParameterClassName($parameter)
-        {
-            $type = $parameter->getType();
-
-            if (!$type instanceof ReflectionNamedType || $type->isBuiltin()) {
-                return;
-            }
-
-            $name = $type->getName();
-
-            if (!is_null($class = $parameter->getDeclaringClass())) {
-                if ($name === 'self') {
-                    return $class->getName();
-                }
-
-                if ($name === 'parent' && $parent = $class->getParentClass()) {
-                    return $parent->getName();
-                }
-            }
-
-            return $name;
         }
     }
