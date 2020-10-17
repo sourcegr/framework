@@ -3,6 +3,8 @@
     namespace Sourcegr\Tests\Http\Router;
 
     use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Http\BoomException;
+    use Sourcegr\Framework\Http\Request\HttpRequest;
     use Sourcegr\Framework\Http\Router\RouteCollection;
     use Sourcegr\Framework\Http\Router\RouteManager;
     use PHPUnit\Framework\TestCase;
@@ -10,6 +12,7 @@
 
     class RouteManagerTest extends TestCase
     {
+        private $routes;
         const ROUTE = 'this/is/the/route';
 
         private function noop()
@@ -18,9 +21,9 @@
             };
         }
 
-        private function init()
+        private function init($url = '/')
         {
-            $callBack = function (RouteCollection $routeCollection) {
+            $this->routes = function (RouteCollection $routeCollection) {
                 $routeCollection->GET(self::ROUTE, $this->noop());
                 $routeCollection->POST(self::ROUTE, $this->noop());
                 $routeCollection->PUT(self::ROUTE, $this->noop());
@@ -28,112 +31,56 @@
                 $routeCollection->DELETE(self::ROUTE, $this->noop());
             };
 
-            $manager = new RouteManager();
-            $manager->loadRoutes('WEB', $callBack);
+            $req = new HttpRequest($url);
+            $manager = new RouteManager($req);
             return $manager;
         }
 
-        public function testLoadsRoutes()
-        {
-            $allRoutes = [];
-            $callBack = function (RouteCollection $routeCollection) use (&$allRoutes) {
-                $allRoutes[] = $routeCollection->GET(self::ROUTE, $this->noop());
-                $allRoutes[] = $routeCollection->POST(self::ROUTE, $this->noop());
-                $allRoutes[] = $routeCollection->PUT(self::ROUTE, $this->noop());
-                $allRoutes[] = $routeCollection->PATCH(self::ROUTE, $this->noop());
-                $allRoutes[] = $routeCollection->DELETE(self::ROUTE, $this->noop());
-            };
-
-            $manager = new RouteManager();
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->routeCollection->getRoutes();
-
-            $this->assertCount(5, $actual, '5 Routes should have been created');
-            $this->assertEquals($allRoutes, $actual, '5 Routes should have been created');
-        }
 
         public function testNoMatchStaticRoute()
         {
             $manager = $this->init();
 
-            $actual = $manager->matchRoute([
-                'url' => 'WRONG',
-                'realm' => 'WRONG',
-                'method' => 'WRONG',
-            ]);
+            $this->expectException(BoomException::class);
+            $actual = $manager->matchRoute($this->routes);
 
-            $this->assertInstanceOf(Boom::class, $actual, 'Should be Instance of Boom');
+//            $this->assertInstanceOf(Boom::class, $actual, 'Should be Instance of Boom');
         }
 
         public function testMatchStaticRoute()
         {
-            $manager = $this->init();
+            $manager = $this->init(static::ROUTE);
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET(static::ROUTE, $this->noop());
+            };
 
-            $actual = $manager->matchRoute([
-                'url' => self::ROUTE,
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+//            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual, 'Expected RouteMatch class');
-//            $this->assertInstanceOf(Boom::class, $actual, 'Should be Instance of Boom');
         }
 
         public function testNoMatchParametersRoute()
         {
-            $manager = $this->init();
-            $manager->routeCollection->GET('contacts/#id/#action', $this->noop());
+            $manager = $this->init('contacts/all');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/#var1/#var2', $this->noop());
+            };
 
-            $actual = $manager->matchRoute([
-                'url' => 'WRONG',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual, 'Should be Instance of Boom');
+            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
         }
 
-        public function testThrowsOnNoParams()
-        {
-            $manager = $this->init();
-
-            $this->expectException(\Exception::class, 'It should throw');
-            $manager->matchRoute([]);
-        }
-
-        public function testThrowsOnMissingParams()
-        {
-            $manager = $this->init();
-
-            $this->expectException(\Exception::class, 'It should throw');
-            $manager->matchRoute([
-                'url' => 'WRONG',
-                'realm' => 'WRONG',
-            ]);
-        }
-
-        public function testReturnsMatcherOnStaticMatch()
-        {
-            $manager = $this->init();
-
-            $actual = $manager->matchRoute([
-                'url' => self::ROUTE,
-                'method' => 'GET',
-                'realm' => 'WEB',
-            ]);
-
-            $this->assertInstanceOf(RouteMatch::class, $actual, 'Expected RouteMatch class');
-        }
 
         public function testReturnsEmptyVarsOnStaticMatch()
         {
-            $manager = $this->init();
+            $manager = $this->init(static::ROUTE);
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET(static::ROUTE, $this->noop());
+            };
 
-            $actual = $manager->matchRoute([
-                'url' => self::ROUTE,
-                'method' => 'GET',
-                'realm' => 'WEB',
-            ]);
+//            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
             $this->assertCount(0, $actual->vars, 'Expected vars to be EMPTY Array');
@@ -142,31 +89,18 @@
 
         public function testReturnsMatcherOnParametersMatch()
         {
-            $manager = $this->init();
-            $manager->routeCollection->GET('contacts/#id/#action', $this->noop());
+            $manager = $this->init('contacts/12/edit');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/#id/#action', $this->noop());
+            };
 
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/1/edit',
-                'method' => 'GET',
-                'realm' => 'WEB',
-            ]);
+//            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual, 'Expected RouteMatch class');
-        }
-
-        public function testReturnsSomeVarsOnParametersMatch()
-        {
-            $manager = $this->init();
-            $manager->routeCollection->GET('contacts/#id/#action', $this->noop());
-
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/1/edit',
-                'method' => 'GET',
-                'realm' => 'WEB',
-            ]);
-
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
-            $this->assertCount(2, $actual->vars, 'Expected vars to has two keys Array');
+            $this->assertCount(2, $actual->vars, 'Expected vars to have length 2');
+            $this->assertEquals(12, $actual->vars['id'], 'id should be 12');
+            $this->assertEquals('edit', $actual->vars['action'], 'action should be edit');
         }
-
     }

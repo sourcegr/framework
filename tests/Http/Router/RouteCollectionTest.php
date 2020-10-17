@@ -74,7 +74,7 @@
 
             /** @var Route $routeGET */
             $routeGET = $coll->getRoutes()[0];
-            $expected = 'GET';
+            $expected = ['GET'];
             $this->assertEquals($expected, $routeGET->getCompiledParam('method'), 'Method should be GET');
 
             $expected = self::ROUTE;
@@ -83,22 +83,22 @@
 
             /** @var Route $routePOST */
             $routePOST = $coll->getRoutes()[1];
-            $expected = 'POST';
+            $expected = ['POST'];
             $this->assertEquals($expected, $routePOST->getCompiledParam('method'), 'Method should be POST');
 
             /** @var Route $routePUT */
             $routePUT = $coll->getRoutes()[2];
-            $expected = 'PUT';
+            $expected = ['PUT'];
             $this->assertEquals($expected, $routePUT->getCompiledParam('method'), 'Method should be PUT');
 
             /** @var Route $routePATCH */
             $routePATCH = $coll->getRoutes()[3];
-            $expected = 'PATCH';
+            $expected = ['PATCH'];
             $this->assertEquals($expected, $routePATCH->getCompiledParam('method'), 'Method should be PATCH');
 
             /** @var Route $routeDELETE */
             $routeDELETE = $coll->getRoutes()[4];
-            $expected = 'DELETE';
+            $expected = ['DELETE'];
             $this->assertEquals($expected, $routeDELETE->getCompiledParam('method'), 'Method should be DELETE');
         }
 

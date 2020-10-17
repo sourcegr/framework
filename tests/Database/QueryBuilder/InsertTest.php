@@ -3,11 +3,10 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
-use Sourcegr\Framework\Database\QueryBuilder\Grammars\MySQL;
-use Sourcegr\Framework\Database\QueryBuilder\Exceptions\InsertErrorException;
 use Sourcegr\Stub\Grammar;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -21,10 +20,9 @@ class InsertTest extends TestCase
 
     private function init()
     {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-        return $qb;
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $db = new DB($grammar);
+        return $db->Table(static::$table);
     }
 
     public function testInsertArray()

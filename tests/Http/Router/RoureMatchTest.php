@@ -5,6 +5,7 @@
     namespace Sourcegr\Tests\Http\Router;
 
     use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Http\BoomException;
     use Sourcegr\Framework\Http\Router\Route;
     use PHPUnit\Framework\TestCase;
     use Sourcegr\Framework\Http\Router\RouteCollection;
@@ -15,145 +16,107 @@
     class RoureMatchTest extends TestCase
     {
         const CURRENT_ROUTE = 'this/is/the/route';
+        private $routes;
 
         private function noop()
         {
             return function () {
             };
         }
+        private function init($url = null) {
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET(self::ROUTE, $this->noop());
+                $routeCollection->POST(self::ROUTE, $this->noop());
+                $routeCollection->PUT(self::ROUTE, $this->noop());
+                $routeCollection->PATCH(self::ROUTE, $this->noop());
+                $routeCollection->DELETE(self::ROUTE, $this->noop());
+            };
+
+            $request = new \Sourcegr\Framework\Http\Request\HttpRequest($url ?? '/');
+            return new RouteManager($request);
+        }
 
 
 
         public function testThrowsOnMultiOptional()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/papas/?optional1/?optional2', $this->noop());
+            $manager = $this->init();
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('get/?optional1/?optional2', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $this->expectException(\Exception::class, 'Multiple optional should throw');
-            $actual = $manager->matchRoute([
-                'url' => 'papas',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+            $this->expectException(\Exception::class, 'testThrowsOnMultiOptional');
+            $manager->matchRoute($this->routes);
         }
 
         public function testDontMatchWithLessParts()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/#action', $this->noop());
+            $manager = $this->init('contacts');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/#action', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+            $this->expectException(BoomException::class, 'testDontMatchWithLessParts');
+            $manager->matchRoute($this->routes);
         }
 
         public function testDontMatchWithMoreParts()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/#action', $this->noop());
+            $manager = $this->init('contacts/action/parameter');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/#action', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/delete/3',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+            $this->expectException(BoomException::class, 'testDontMatchWithMoreParts');
+            $manager->matchRoute($this->routes);
         }
 
         public function testDontMatchOnOptionalWithWayMoreParts()
         {
-            $callBack = function (RouteCollection $routeCollection) {
+            $manager = $this->init('contacts/one/delete/1/2');
+            $this->routes = function (RouteCollection $routeCollection) {
                 $routeCollection->GET('/contacts/one/delete/?id', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/one/delete/1/2',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+            $this->expectException(BoomException::class, 'testDontMatchOnOptionalWithWayMoreParts');
+            $manager->matchRoute($this->routes);
         }
 
         public function testDontMatchOnOptionalWithLessParts()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/one/delete/?id', $this->noop());
+            $manager = $this->init('contacts/one');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/one/delete/?id', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/one',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+            $this->expectException(BoomException::class, 'testDontMatchOnOptionalWithLessParts');
+            $manager->matchRoute($this->routes);
         }
 
         public function testMatchRequiredParameter()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/#action', $this->noop());
+            $manager = $this->init('contacts/list');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/#action', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/list',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
             $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');
             $this->assertArrayHasKey('action', $actual->vars);
             $this->assertEquals('list', $actual->vars['action']);
-//            $this->assertEquals(404, $actual->statusCode, 'RouteMatch should be returned');
         }
 
         public function testMatchOptionalParameterNoWildcard()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/?action', $this->noop());
+            $manager = $this->init('contacts/list');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?action', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/list',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
@@ -164,19 +127,12 @@
 
         public function testMatchOptionalParameterNoWildcardEmpty()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/?action', $this->noop());
+            $manager = $this->init('contacts');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?action', $this->noop());
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
-
+            $actual = $manager->matchRoute($this->routes);
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
             $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');
@@ -186,18 +142,12 @@
 
         public function testMatchOptionalParameterWithWildcard()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/?action', $this->noop())->matchesAll();
+            $manager = $this->init('contacts/too/long/url');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?action', $this->noop())->matchesAll();
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/too/long/url',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
@@ -208,18 +158,12 @@
 
         public function testMatchOptionalParameterWithWildcardEmpty()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('/contacts/?action', $this->noop())->matchesAll();
+            $manager = $this->init('contacts');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?action', $this->noop())->matchesAll();
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts',
-                'realm' => 'WEB',
-                'method' => 'GET',
-            ]);
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
@@ -230,41 +174,23 @@
 
         public function testDontMatchWithWhere()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection
-                    ->POST('/contacts/delete/?id', $this->noop())
-                    ->where('id', '/^[1-9][0-9]$/'); #(num with no leading zero)
+            $manager = $this->init('contacts/papas');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?id', $this->noop())->where('id', '/^[1-9][0-9]$/');
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/delete/ERROR',
-                'realm' => 'WEB',
-                'method' => 'POST',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+            $this->expectException(\Exception::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
         }
-
         public function testMatchWithWhere()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection
-                    ->POST('/contacts/delete/?id', $this->noop())
-                    ->where('id', '/^[1-9][0-9]*$/'); #(num with no leading zero)
+            $manager = $this->init('contacts/4');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/?id', $this->noop())->where('id', '/^[1-9][0-9]*$/');
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/delete/4',
-                'realm' => 'WEB',
-                'method' => 'POST',
-            ]);
+//            $this->expectException(\Exception::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
@@ -273,53 +199,42 @@
             $this->assertEquals(4, $actual->vars['id']);
         }
 
+
         public function testDontMatchWithPredicate()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection
-                    ->POST('/contacts/delete/?id', $this->noop())
+            $manager = $this->init('contacts/delete/ERROR');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/delete/?id', $this->noop())
                     ->setPredicate(function ($match) {
                         return $match->vars['id'] == 100;
                     });
             };
 
-            $manager = new RouteManager();
+            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/delete/ERROR',
-                'realm' => 'WEB',
-                'method' => 'POST',
-            ]);
-
-            $this->assertInstanceOf(Boom::class, $actual);
-            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
+//            $this->assertInstanceOf(Boom::class, $actual);
+//            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
         }
 
         public function testMatchWithPredicate()
         {
-            $callBack = function (RouteCollection $routeCollection) {
-                $routeCollection
-                    ->POST('/contacts/delete/?id', $this->noop())
+            $manager = $this->init('contacts/delete/100');
+            $this->routes = function (RouteCollection $routeCollection) {
+                $routeCollection->GET('contacts/delete/?id', $this->noop())
                     ->setPredicate(function ($match) {
-                        return $match->vars['id'] == 4;
+                        return $match->vars['id'] == 100;
                     });
             };
 
-            $manager = new RouteManager();
-
-            $manager->loadRoutes('WEB', $callBack);
-            $actual = $manager->matchRoute([
-                'url' => 'contacts/delete/4',
-                'realm' => 'WEB',
-                'method' => 'POST',
-            ]);
+//            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
+            $actual = $manager->matchRoute($this->routes);
 
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
             $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');
             $this->assertArrayHasKey('id', $actual->vars);
-            $this->assertEquals(4, $actual->vars['id']);
+            $this->assertEquals(100, $actual->vars['id']);
         }
 
     }

@@ -3,7 +3,7 @@
     namespace Sourcegr\Tests\Database\Freakquent;
 
     use Sourcegr\Framework\Database\QueryBuilder\DB;
-    use Sourcegr\Framework\Database\QueryBuilder\Grammars\MySQL;
+    use Sourcegr\Framework\Database\QueryBuilder\Grammar\MysqlGrammar;
     use Sourcegr\Framework\Database\Freakquent\Freakquent;
 
     use Sourcegr\Stub\Models\Company;

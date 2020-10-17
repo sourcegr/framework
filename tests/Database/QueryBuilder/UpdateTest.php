@@ -3,6 +3,7 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
@@ -20,10 +21,9 @@ class UpdateTest extends TestCase
 
     private function init()
     {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-        return $qb;
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $db = new DB($grammar);
+        return $db->Table(static::$table);
     }
 
     public function testUpdateArray()

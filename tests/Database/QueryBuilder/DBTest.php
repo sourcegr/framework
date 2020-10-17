@@ -3,18 +3,20 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Stub\Grammar;
 use ArgumentCountError;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 class DBTest extends TestCase
 {
     public function testCreatesDB(): void
     {
-        $grammar = new Grammar();
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
         $db = new DB($grammar);
         $this->assertEquals(DB::class, get_class($db), 'testCreatesDB');
     }
@@ -27,13 +29,13 @@ class DBTest extends TestCase
 
     public function testThrowsOnUnfitGrammar(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $db = new DB(null);
     }
 
     public function testReturnsQB(): void
     {
-        $grammar = new Grammar();
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
         $db = new DB($grammar);
         $qb = $db->Table('table');
         $this->assertEquals(QueryBuilder::class, get_class($qb), 'testReturnsQB');
@@ -41,7 +43,7 @@ class DBTest extends TestCase
 
     public function testGetGrammar(): void
     {
-        $grammar = new Grammar();
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
         $db = new DB($grammar);
 
         $actual = $db->getGrammar();
@@ -51,14 +53,16 @@ class DBTest extends TestCase
 
     public function testSetGrammar(): void
     {
-        $grammar = new Grammar();
-        $db = new DB('no grammar');
-        $this->assertEquals('no grammar', $db->getGrammar(), 'testSetGrammar');
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $grammar1 = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $db = new DB($grammar);
 
-        $db->setGrammar($grammar);
+        $this->assertEquals($grammar, $db->getGrammar(), 'testSetGrammar');
+
+        $db->setGrammar($grammar1);
         $actual = $db->getGrammar();
 
-        $this->assertEquals($grammar, $actual, 'testSetGrammar');
+        $this->assertEquals($grammar1, $actual, 'testSetGrammar');
     }
 
 

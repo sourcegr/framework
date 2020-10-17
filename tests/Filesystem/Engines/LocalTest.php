@@ -2,23 +2,23 @@
 
     namespace Sourcegr\Tests\Filesystem\Engines;
 
-    use Sourcegr\Framework\Filesystem\Engines\FileSystemDrive;
+    use Sourcegr\Framework\Filesystem\Engine\Local;
     use PHPUnit\Framework\TestCase;
 
-    class FileSystemDriveTest extends TestCase
+    class LocalTest extends TestCase
     {
         const DRIVE_PATH = '/tmp';
         const APPX_DIR = '/appx_test';
 
-        private function init($dir = null) {
-            $drive = new FileSystemDrive($dir ?? self::DRIVE_PATH);
-            return $drive;
+        private function init($dir = self::DRIVE_PATH) {
+            return new Local($dir);
         }
 
         public function testThrowsOnNonExistingDir() {
             $this->expectException(\Exception::class);
-            $drive = $this->init('this_dir_should_not_even_exist_in_more_systems');
+            $this->init('this_dir_should_not_even_exist_in_more_systems');
         }
+
         public function testCreateDirectory()
         {
             $drive = $this->init();

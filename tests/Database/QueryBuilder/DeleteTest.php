@@ -3,6 +3,7 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
@@ -17,10 +18,9 @@ class DeleteTest extends TestCase
 
     private function init()
     {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-        return $qb;
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $qb = new DB($grammar);
+        return $qb->Table(static::$table);
     }
 
     public function testDeleteAll()

@@ -9,7 +9,7 @@
     use Sourcegr\Stub\App\Moto;
     use Sourcegr\Stub\App\MotoInterface;
 
-    class ContainerTest extends TestCase
+    class ContainerNotReadytest extends TestCase
     {
         public function testContainer(): int
         {

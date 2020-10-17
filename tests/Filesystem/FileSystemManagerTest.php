@@ -2,7 +2,7 @@
 
     namespace Sourcegr\Tests\Filesystem;
 
-    use Sourcegr\Framework\Filesystem\Engines\FileSystemDrive;
+    use Sourcegr\Framework\Filesystem\Engine\Local;
     use Sourcegr\Framework\Filesystem\FileSystemManager;
     use PHPUnit\Framework\TestCase;
 
@@ -21,7 +21,7 @@
 
         public function testAttachDrive() {
             $manager = new FileSystemManager();
-            $drive = new FileSystemDrive(self::DRIVE_PATH);
+            $drive = new Local(self::DRIVE_PATH);
 
             $manager->attachDrive(self::DRIVE_NAME, $drive);
 
@@ -35,7 +35,7 @@
             $manager = $this->testAttachDrive();
             $drive = $manager->drive(self::DRIVE_NAME);
 
-            $this->assertInstanceOf(FileSystemDrive::class, $drive);
+            $this->assertInstanceOf(Local::class, $drive);
         }
 
         public function testDrivePath() {

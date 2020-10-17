@@ -30,7 +30,7 @@
             $route = new Route(null, $method, $url, $this->noop(), null, null);
 
             $actual = $route->getCompiledParam('method');
-            $expected = strtoupper($method);
+            $expected = [strtoupper($method)];
             $this->assertEquals($expected, $actual, 'METHOD failure');
 
             $actual = $route->getCompiledParam('url');

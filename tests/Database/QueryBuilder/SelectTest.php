@@ -3,26 +3,23 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
-use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
-use Sourcegr\Framework\Database\QueryBuilder\Grammars\MySQL;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
 use Sourcegr\Stub\Grammar;
 use PHPUnit\Framework\TestCase;
 
 class SelectTest extends TestCase
 {
-    /*
-     *
-     */
+
     static $table = 'table';
 
     private function init()
     {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-        return $qb;
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $db = new DB($grammar);
+//        return  $db;
+                return $db->Table(static::$table);
     }
 
 

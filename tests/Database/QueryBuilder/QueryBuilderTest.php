@@ -3,9 +3,10 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
-use Sourcegr\Framework\Database\QueryBuilder\Grammars\MySQL;
+use Sourcegr\Framework\Database\QueryBuilder\Grammar\MysqlGrammar;
 use Sourcegr\Stub\Grammar;
 use PHPUnit\Framework\TestCase;
 
@@ -19,24 +20,11 @@ class QueryBuilderTest extends TestCase
 
     private function init()
     {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-        return $qb;
+        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+        $db = new DB($grammar);
+        return $db->Table(static::$table);
     }
 
-
-    public function testSetGrammarGetGrammar()
-    {
-        $grammar = new Grammar();
-        $qb = new QueryBuilder(static::$table);
-        $qb->setGrammar($grammar);
-
-
-        $expected = get_class($grammar);
-        $actual = get_class($qb->getGrammar());
-        $this->assertEquals($expected, $actual, 'testSetGrammar');
-    }
 
     public function testGetTable()
     {
