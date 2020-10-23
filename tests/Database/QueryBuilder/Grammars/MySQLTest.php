@@ -2,7 +2,7 @@
 
 namespace Sourcegr\Tests\Database\QueryBuilder\Grammars;
 
-use Sourcegr\Framework\Database\QueryBuilder\Grammar\MysqlGrammar;
+use Sourcegr\Framework\Database\MysqlGrammar;
 use PHPUnit\Framework\TestCase;
 
 class MySQLTest extends TestCase

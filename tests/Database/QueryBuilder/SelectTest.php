@@ -3,7 +3,7 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
-use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
+use Sourcegr\Framework\Database\DBConnectionManager;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
 use Sourcegr\Stub\Grammar;
@@ -16,10 +16,11 @@ class SelectTest extends TestCase
 
     private function init()
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
-//        return  $db;
-                return $db->Table(static::$table);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+        $db = new DB($cm->getConnection('default'));
+
+        return $db->Table(static::$table);
     }
 
 

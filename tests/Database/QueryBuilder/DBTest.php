@@ -3,7 +3,9 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
-use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
+use Sourcegr\Framework\Database\DBConnectionManager;
+use Sourcegr\Framework\Database\DummyGrammar;
+use Sourcegr\Framework\Database\TextDumpGrammar;
 use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Stub\Grammar;
@@ -16,14 +18,20 @@ class DBTest extends TestCase
 {
     public function testCreatesDB(): void
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+
+        $db = new DB($cm->getConnection('default'));
+
         $this->assertEquals(DB::class, get_class($db), 'testCreatesDB');
     }
 
     public function testThrowsOnNoGrammar(): void
     {
         $this->expectException(ArgumentCountError::class);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+
         $db = new DB();
     }
 
@@ -35,34 +43,41 @@ class DBTest extends TestCase
 
     public function testReturnsQB(): void
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+
+        $db = new DB($cm->getConnection('default'));
+
         $qb = $db->Table('table');
         $this->assertEquals(QueryBuilder::class, get_class($qb), 'testReturnsQB');
     }
 
     public function testGetGrammar(): void
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+
+        $db = new DB($cm->getConnection('default'));
 
         $actual = $db->getGrammar();
 
-        $this->assertEquals($grammar, $actual, 'testGetGrammar');
+        $this->assertInstanceOf(DummyGrammar::class, $actual, 'testGetGrammar');
     }
 
     public function testSetGrammar(): void
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $grammar1 = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+        $db = new DB($cm->getConnection('default'));
 
-        $this->assertEquals($grammar, $db->getGrammar(), 'testSetGrammar');
+        $grammar1 = new TextDumpGrammar(new \PDO('sqlite::memory:'));
+
+        $this->assertInstanceOf(DummyGrammar::class, $db->getGrammar(), 'testSetGrammar');
 
         $db->setGrammar($grammar1);
         $actual = $db->getGrammar();
 
-        $this->assertEquals($grammar1, $actual, 'testSetGrammar');
+        $this->assertInstanceOf(TextDumpGrammar::class, $actual, 'testSetGrammar');
     }
 
 

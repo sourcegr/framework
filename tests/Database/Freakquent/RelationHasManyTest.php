@@ -4,7 +4,7 @@
 
     use Sourcegr\Framework\Database\QueryBuilder\DB;
     use Sourcegr\Framework\Database\Freakquent\Freakquent;
-    use Sourcegr\Framework\Database\QueryBuilder\Grammar\MysqlGrammar;
+    use Sourcegr\Framework\Database\PDOConnection\Grammar\MysqlGrammar;
     use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
     use Sourcegr\Stub\Grammar;
     use Sourcegr\Stub\Models\Company;

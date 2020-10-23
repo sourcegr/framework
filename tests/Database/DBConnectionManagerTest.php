@@ -11,20 +11,19 @@
     {
 
         public function testCreate($name = 'n', $driver = 'mysql') {
-
-
             $config = [
-                'USER' => 'root',
-                'PASSWORD' => 'root',
-                'PDO_PARAMS' => [
+                'user' => 'root',
+                'password' => 'root',
+                'pdo_params' => [
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8mb4'"
                 ],
-                'HOST' => '127.0.0.1',
-                'PORT' => 3306,
-                'DB' => 'test'
+                'host' => '127.0.0.1',
+                'port' => 3306,
+                'db' => 'test'
             ];
             $manager = new DBConnectionManager();
-            $result = $manager->create($name, $driver, $config);
+            $result = $manager->create( $name, $driver, $config);
+
 
             self::assertInstanceOf(PDOConnection::class, $result);
             self::assertInstanceOf(PDO::class, $result->connection);
@@ -40,6 +39,6 @@
             $manager = $this->testCreate($name, $driver);
             $result = $manager->getConnection($name);
 
-            self::assertInstanceOf(PDO::class, $result);
+            self::assertInstanceOf(PDOConnection::class, $result);
         }
     }

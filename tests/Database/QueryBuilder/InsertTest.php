@@ -3,11 +3,9 @@
 namespace Sourcegr\Tests\Database\QueryBuilder;
 
 
-use Sourcegr\Framework\Database\QueryBuilder\Grammar\TextDumpGrammar;
-use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
+use Sourcegr\Framework\Database\DBConnectionManager;
 use Sourcegr\Framework\Database\QueryBuilder\DB;
 use Sourcegr\Framework\Database\QueryBuilder\Raw;
-use Sourcegr\Stub\Grammar;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -20,8 +18,10 @@ class InsertTest extends TestCase
 
     private function init()
     {
-        $grammar = new TextDumpGrammar(new \PDO('sqlite::memory:'));
-        $db = new DB($grammar);
+        $cm = new DBConnectionManager();
+        $cm->create('default', 'dummy', []);
+        $db = new DB($cm->getConnection('default'));
+
         return $db->Table(static::$table);
     }
 

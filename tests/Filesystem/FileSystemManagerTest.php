@@ -25,8 +25,8 @@
 
             $manager->attachDrive(self::DRIVE_NAME, $drive);
 
-            $this->assertCount(1, $manager->getDrives());
-            $this->assertContains($drive, $manager->getDrives());
+            $this->assertCount(1, $manager->all());
+            $this->assertContains($drive, $manager->all());
 
             return $manager;
         }

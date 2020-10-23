@@ -56,8 +56,8 @@
                 $routeCollection->GET('contacts/#action', $this->noop());
             };
 
-            $this->expectException(BoomException::class, 'testDontMatchWithLessParts');
-            $manager->matchRoute($this->routes);
+            $res = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $res, 'A BOOM was not returned');
         }
 
         public function testDontMatchWithMoreParts()
@@ -67,8 +67,8 @@
                 $routeCollection->GET('contacts/#action', $this->noop());
             };
 
-            $this->expectException(BoomException::class, 'testDontMatchWithMoreParts');
-            $manager->matchRoute($this->routes);
+            $res = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $res, 'A BOOM was not returned');
         }
 
         public function testDontMatchOnOptionalWithWayMoreParts()
@@ -78,8 +78,8 @@
                 $routeCollection->GET('/contacts/one/delete/?id', $this->noop());
             };
 
-            $this->expectException(BoomException::class, 'testDontMatchOnOptionalWithWayMoreParts');
-            $manager->matchRoute($this->routes);
+            $res = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $res, 'A BOOM was not returned');
         }
 
         public function testDontMatchOnOptionalWithLessParts()
@@ -89,8 +89,8 @@
                 $routeCollection->GET('contacts/one/delete/?id', $this->noop());
             };
 
-            $this->expectException(BoomException::class, 'testDontMatchOnOptionalWithLessParts');
-            $manager->matchRoute($this->routes);
+            $res = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $res, 'A BOOM was not returned');
         }
 
         public function testMatchRequiredParameter()
@@ -179,8 +179,8 @@
                 $routeCollection->GET('contacts/?id', $this->noop())->where('id', '/^[1-9][0-9]$/');
             };
 
-            $this->expectException(\Exception::class, 'testThrowsOnMultiOptional');
             $actual = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $actual, 'A BOOM was not returned');
         }
         public function testMatchWithWhere()
         {
@@ -198,43 +198,4 @@
             $this->assertArrayHasKey('id', $actual->vars);
             $this->assertEquals(4, $actual->vars['id']);
         }
-
-
-        public function testDontMatchWithPredicate()
-        {
-            $manager = $this->init('contacts/delete/ERROR');
-            $this->routes = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('contacts/delete/?id', $this->noop())
-                    ->setPredicate(function ($match) {
-                        return $match->vars['id'] == 100;
-                    });
-            };
-
-            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
-            $actual = $manager->matchRoute($this->routes);
-
-//            $this->assertInstanceOf(Boom::class, $actual);
-//            $this->assertEquals(404, $actual->statusCode, '404 should be returned');
-        }
-
-        public function testMatchWithPredicate()
-        {
-            $manager = $this->init('contacts/delete/100');
-            $this->routes = function (RouteCollection $routeCollection) {
-                $routeCollection->GET('contacts/delete/?id', $this->noop())
-                    ->setPredicate(function ($match) {
-                        return $match->vars['id'] == 100;
-                    });
-            };
-
-//            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
-            $actual = $manager->matchRoute($this->routes);
-
-            $this->assertInstanceOf(RouteMatch::class, $actual);
-            $this->assertIsArray($actual->vars, 'Expected vars to be Array');
-            $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');
-            $this->assertArrayHasKey('id', $actual->vars);
-            $this->assertEquals(100, $actual->vars['id']);
-        }
-
     }

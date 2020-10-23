@@ -41,10 +41,8 @@
         {
             $manager = $this->init();
 
-            $this->expectException(BoomException::class);
             $actual = $manager->matchRoute($this->routes);
-
-//            $this->assertInstanceOf(Boom::class, $actual, 'Should be Instance of Boom');
+            $this->assertInstanceOf(Boom::class, $actual);
         }
 
         public function testMatchStaticRoute()
@@ -67,8 +65,8 @@
                 $routeCollection->GET('contacts/#var1/#var2', $this->noop());
             };
 
-            $this->expectException(BoomException::class, 'testThrowsOnMultiOptional');
             $actual = $manager->matchRoute($this->routes);
+            $this->assertInstanceOf(Boom::class, $actual);
         }
 
 
