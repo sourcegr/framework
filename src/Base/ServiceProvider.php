@@ -26,7 +26,7 @@
 
         public function loadConfig($config)
         {
-            return $this->container->get('APP')->loadConfig($config);
+            return \app()->loadConfig($config);
         }
 
         public function registerSomethingElse()

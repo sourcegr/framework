@@ -1396,4 +1396,13 @@
         {
             $this[$key] = $value;
         }
+
+
+        public function makeFromString($str, $vars=null) {
+            if (strpos($str, '@') === false) {
+                return $this->make($str, $vars);
+            }
+
+            return $this->call($str, $vars);
+        }
     }

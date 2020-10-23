@@ -53,7 +53,7 @@
          *
          * @return $this
          */
-        public function add($parametersOrKey, $value = null): ParameterBag
+        public function add($parametersOrKey, $value = null): self
         {
             if (!Arr::is($parametersOrKey)) {
                 $parametersOrKey = [$parametersOrKey => $value];

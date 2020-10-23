@@ -6,7 +6,7 @@
     namespace Sourcegr\Framework\Http\Session;
 
 
-    interface SessionManagerInterface
+    interface SessionProviderInterface
     {
 
     }

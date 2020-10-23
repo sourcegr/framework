@@ -8,6 +8,11 @@
 
     interface EncryptorInterface
     {
+
+        public function addPrefix($to);
+
+        public function removePrefix($from);
+
         public function __construct($key, $cipher = 'AES-128-CBC');
 
         public function encrypt($value, $serialize = true);

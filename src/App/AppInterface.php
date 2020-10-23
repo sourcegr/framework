@@ -10,8 +10,6 @@
 
     interface AppInterface
     {
-        public function getRequest(): RequestInterface;
-
         public function isDownForMaintenance();
 
         public function loadAppConfig($key);
@@ -24,5 +22,7 @@
 
         public function bootServiceProviders();
 
-        public function execMiddleware();
+        public function getShutDownCallbacks(): array;
+
+        public function registerShutdownCallback($callback);
     }

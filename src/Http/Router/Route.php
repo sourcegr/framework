@@ -13,6 +13,9 @@
         public const DEFAULT_REALM = 'WEB';
         public const IS_POSITIVE_NUMBER = '/^[1-9][0-9]*$/';
 
+        public $callback;
+        public $routeSegments = null;
+
         protected $url = [];
         protected $prefix;
         protected $realm = self::DEFAULT_REALM;
@@ -20,8 +23,8 @@
         protected $hasWildcardParameter = false;
         protected $where;
         protected $predicates = [];
-        protected $callback;
         protected $middlewares = [];
+
 
 
         public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
@@ -37,6 +40,15 @@
             }
 
             $this->$middlewares = $middlewares ?? [];
+        }
+
+
+        public function getRouteSegments() {
+            if ($this->routeSegments) {
+                return $this->routeSegments;
+            }
+
+            return $this->routeSegments = explode('/', $this->getCompiledParam('url'));
         }
 
         /**

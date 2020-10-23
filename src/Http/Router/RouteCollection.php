@@ -8,7 +8,7 @@
 
     use Sourcegr\Framework\Http\Boom;
     use Sourcegr\Framework\Http\BoomException;
-    use Sourcegr\Framework\Http\Response\HTTPResponseCodes;
+    use Sourcegr\Framework\Http\Response\HTTPResponseCode;
 
     class RouteCollection implements RouteCollectionInterface
     {
@@ -72,7 +72,7 @@
 
         public function getFourOhFour()
         {
-            throw new BoomException(new Boom(HTTPResponseCodes::HTTP_NOT_FOUND));
+            throw new BoomException(new Boom(HTTPResponseCode::HTTP_NOT_FOUND));
         }
 
         public function __construct(?string $defaultRealm = null)
@@ -84,9 +84,14 @@
             array $method,
             string $url,
             $callback,
+            $callbackMethod = null,
             $predicate = null,
             string $middleware = null
         ): Route {
+            if (is_string($callback) && is_string($callbackMethod)) {
+                $callback = "$callback@$callbackMethod";
+            }
+
             $r = new Route($this->defaultRealm, $method, $url, $callback, $predicate, $middleware);
 //            $r->setCollection($this);
             $this->routes[] = $r;
@@ -126,29 +131,29 @@
 
 
         // methods and basic
-        public function GET($url, $callback)
+        public function GET($url, $callback, $method = null)
         {
-            return $this->addRoute(['GET'], $url, $callback);
+            return $this->addRoute(['GET'], $url, $callback, $method);
         }
 
-        public function POST($url, $callback)
+        public function POST($url, $callback, $method = null)
         {
-            return $this->addRoute(['POST'], $url, $callback);
+            return $this->addRoute(['POST'], $url, $callback, $method);
         }
 
-        public function PUT($url, $callback)
+        public function PUT($url, $callback, $method = null)
         {
-            return $this->addRoute(['PUT'], $url, $callback);
+            return $this->addRoute(['PUT'], $url, $callback, $method);
         }
 
-        public function PATCH($url, $callback)
+        public function PATCH($url, $callback, $method = null)
         {
-            return $this->addRoute(['PATCH'], $url, $callback);
+            return $this->addRoute(['PATCH'], $url, $callback, $method);
         }
 
-        public function DELETE($url, $callback)
+        public function DELETE($url, $callback, $method = null)
         {
-            return $this->addRoute(['DELETE'], $url, $callback);
+            return $this->addRoute(['DELETE'], $url, $callback, $method);
         }
 
         /*

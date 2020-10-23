@@ -16,5 +16,5 @@
 
         public function drive(string $driveName): ?FileSystemDriveInterface;
 
-        public function getDrives(): array;
+        public function all(): array;
     }

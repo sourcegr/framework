@@ -14,9 +14,10 @@
         /** @var PredicateCompiler */
         public $vars = [];
         public $route;
+        public $url;
 
         protected $parser;
-        protected $predicateCompiler;
+        public $predicateCompiler;
 
         protected $checkMap = [];
 
@@ -47,7 +48,7 @@
             $routeHasOptional = $numFound > 0;
             $routeHasWildcard = $routeHasOptional && $this->route->getCompiledParam('hasWildcardParameter');
 
-            $routeSegments = explode('/', $this->route->getCompiledParam('url'));
+            $routeSegments = $this->route->getRouteSegments();
             $routeSegmentsLength = count($routeSegments);
 
             $urlSegments = $this->parser->urlSegments;
@@ -124,15 +125,8 @@
                     $result = $where($this->vars, $this) && $result;
                 }
 
-                // if there are any predicates, check if they are met
-                $predicates = $this->route->getCompiledParam('predicates');
-                if (count($predicates)) {
-                    foreach ($predicates as $predicate) {
-                        $result = $result && $this->predicateCompiler->runPredicate($predicate, $this);
-                    }
-                }
-
                 if ($result) {
+                    $this->url = $this->parser->url;
                     return $this;
                 }
             }

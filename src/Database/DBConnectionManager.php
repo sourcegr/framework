@@ -13,15 +13,31 @@
     class DBConnectionManager implements DBConnectionManagerInterface
     {
         protected $connections;
+        protected $defaultConnection = 'default';
+
+        public function getDefaultConnection(): ?PDOConnection
+        {
+            return $this->getConnection($this->defaultConnection);
+        }
+
+
+        /**
+         * @param string $defaultConnection
+         */
+        public function setDefaultConnection(string $defaultConnection = 'default'): void
+        {
+            $this->defaultConnection = $defaultConnection;
+        }
+
 
         /**
          * @param $name
          *
          * @return PDO|null
          */
-        public function getConnection(string $name) : ?PDO {
+        public function getConnection(string $name) : ?PDOConnection {
             $PDOConnection = $this->connections[$name] ?? null;
-            return $PDOConnection->connection ?? null;
+            return $PDOConnection ?? null;
         }
 
 
@@ -39,10 +55,15 @@
             try {
                 $PDOConnection = new PDOConnection(
                     $connectionString,
-                    $config['USER'],
-                    $config['PASSWORD'],
-                    $config['PDO_PARAMS']
+                    $config['user'] ?? null,
+                    $config['password'] ?? null,
+                    $config['pdo_params'] ?? []
                 );
+
+                $grammarClassName = __NAMESPACE__ . "\\" . ucfirst(strtolower($driver)).'Grammar';
+
+                $grammar = new $grammarClassName($PDOConnection->connection);
+                $PDOConnection->setGrammar($grammar);
 
                 $this->setPostParams($PDOConnection, $driver, $config);
                 $this->connections[$name] = $PDOConnection;
@@ -50,6 +71,7 @@
                 return $PDOConnection;
 
             } catch(\Exception $e){
+                var_dump($e);
                 throw new DBConnectionErrorException("Cannot create named connection $name");
             }
         }
@@ -62,16 +84,18 @@
          * @return string
          */
         protected function getConnectionString(string $driver, array $config) {
-            $host = $config['HOST'];
-            $port = $config['PORT'];
-            $db = $config['DB'];
-
             switch ($driver) {
                 case 'mysql':
+                    $host = $config['host'] ?? '127.0.0.1';
+                    $db = $config['db'] ?? 'test';
+                    $port = $config['port'] ?? 3386;
                     return "mysql:host=$host;port=$port;dbname=$db";
 
                 case 'postgress':
                     return '';
+
+                case 'dummy':
+                    return 'sqlite::memory:';
             }
         }
 
@@ -87,15 +111,18 @@
          */
         protected function setPostParams(PDOConnection $PDOConnection, string $driver, array $config) {
 
-            $encoding = $config['ENCODING'] ?? 'UTF8mb4';
+            $encoding = $config['encoding'] ?? 'UTF8mb4';
 
             switch ($driver) {
                 case 'mysql':
                     $PDOConnection->connection->setAttribute(PDO::MYSQL_ATTR_FOUND_ROWS, true);
+                    // todo - run SET NAMES '$encoding' on MySQL Connection
                     return;
 
                 case 'postgress':
                     return '';
             }
         }
+
+
     }

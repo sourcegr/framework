@@ -23,11 +23,13 @@
 
         public function getMethod(): string;
 
-        public function getHeader(string $header): ?string;
+        public function getHeader(string $header = null);
 
         public function get(string $key, string $type = null): ?string;
 
-        public function filesArray(): array;
+        public function files(): array;
 
-        public function getSession();
+        public function persistSession();
+
+        public function flash(string $name, $value);
     }

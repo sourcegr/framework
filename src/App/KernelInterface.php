@@ -6,9 +6,9 @@
     namespace Sourcegr\Framework\App;
 
 
-    use Sourcegr\Framework\Http\Request\RequestInterface;
+    use Sourcegr\Framework\Http\Router\RouteMatchInterface;
 
     interface KernelInterface
     {
-        public function handle(RequestInterface $request);
+        public function handleRoute(RouteMatchInterface $route);
     }

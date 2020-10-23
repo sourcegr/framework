@@ -13,7 +13,9 @@
     interface DBConnectionManagerInterface
     {
 
-        public function getConnection(string $name): ?PDO;
+        public function getConnection(string $name): ?PDOConnection;
+
+        public function getDefaultConnection(): ?PDOConnection;
 
         public function create(string $name, string $driver, array $config) : PDOConnection;
     }

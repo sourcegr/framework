@@ -6,24 +6,25 @@
     namespace Sourcegr\Framework\App;
 
 
-
     use Sourcegr\Framework\Base\ServiceProviderInterface;
+    use Sourcegr\Framework\Http\Boom;
     use Sourcegr\Framework\Http\Request\RequestInterface;
+    use Sourcegr\Framework\Http\Response\ResponseInterface;
 
     class App implements AppInterface
     {
         /**
-         * @var array holds the instances of the service providers
+         * @var array $serviceProviders holds the instances of the service providers
          */
         protected $serviceProviders = [];
 
         /**
-         * @var array holds classNames for loaded service providers
+         * @var array $loadedProviders holds classNames for loaded service providers
          */
         protected $loadedProviders = [];
 
         /**
-         * @var array holds BOOTED service provider instances
+         * @var array $bootedProviders holds BOOTED service provider instances
          */
         protected $bootedProviders = [];
 
@@ -32,21 +33,44 @@
          */
 
         /**
-         * @var array holds BOOTED middleware instances
+         * @var array $bootedMiddleware holds BOOTED middleware instances
          */
         protected $bootedMiddleware = [];
 
-        protected $request;
+
+        /**
+         * @var array $shutDownCallbacks holds callbacks to call after the route has been parsed
+         */
+        protected $shutDownCallbacks = [];
+
+        /**
+         * @var RequestInterface $request
+         */
+        public $request;
+
+
+        /**
+         * @var ResponseInterface $response
+         */
+        public $response;
+
+
         /**
          * @var ContainerInterface the container instance
          */
         public $container;
 
 
+        /**
+         * @var mixed
+         */
+        public $appConfig;
 
-        public function getRequest(): RequestInterface
+
+        protected function markServiceProviderAsRegistered(ServiceProviderInterface $provider)
         {
-            return $this->request;
+            $this->serviceProviders[] = $provider;
+            $this->loadedProviders[get_class($provider)] = true;
         }
 
 
@@ -56,11 +80,61 @@
         }
 
 
+        protected function registerServiceProvider($provider)
+        {
+            if (is_string($provider)) {
+                $provider = $this->getServiceProviderInstance($provider);
+            }
+
+            // run register on provider instance
+            $provider->register();
+
+            // mark registered
+            $this->markServiceProviderAsRegistered($provider);
+        }
+
+
+        protected function bootServiceProvider($provider)
+        {
+            if (in_array($provider, $this->bootedProviders)) {
+                return;
+            }
+
+            $this->container->call([$provider, 'boot']);
+
+            $this->bootedProviders[] = $provider;
+        }
+
+
+        protected function getServiceProviderInstance(string $provider)
+        {
+            // use the method bellow to use dependency injection
+            // return $this->container->make($provider);
+
+            // or save some CPU cycles since we only want DI in @boot method
+            return new $provider($this->container);
+        }
+
+
+
+
+
+        public function middlewareBooted($middleware) {
+            return in_array($middleware, $this->bootedMiddleware);
+        }
+
+
+
+        public function getShutDownCallbacks(): array
+        {
+            return $this->shutDownCallbacks;
+        }
+
+
         public function __construct()
         {
             $this->container = new Container($this);
         }
-
 
         public function isDownForMaintenance()
         {
@@ -76,7 +150,6 @@
 
         public function loadConfig($file, $key = null)
         {
-
             $config = $this->loadConfigFile($this->getPath('CONFIG') . $file);
             return is_null($key) ? $config : $config[$key];
         }
@@ -86,20 +159,6 @@
         {
             $config = require "$file.php";
             return is_null($key) ? $config : $config[$key];
-        }
-
-
-        protected function registerServiceProvider($provider)
-        {
-            if (is_string($provider)) {
-                $provider = $this->getServiceProviderInstance($provider);
-            }
-
-            // run register on provider instance
-            $provider->register();
-
-            // mark registered
-            $this->markServiceProviderAsRegistered($provider);
         }
 
 
@@ -124,61 +183,10 @@
         }
 
 
-
-        public function execMiddleware()
+        public function registerShutdownCallback($callback)
         {
-            $groups = func_get_args();
-
-            foreach ($groups as $middlewares) {
-                //ensure it is an array
-                if (!is_array($middlewares)) {
-                    $middlewares = [$middlewares];
-                }
-                foreach ($middlewares as $middleware) {
-                    $this->runMiddleware($middleware);
-                }
-//                array_walk($middlewares, [$this, 'runMiddleware', ]);
+            if (is_callable($callback)) {
+                $this->shutDownCallbacks[] = $callback;
             }
-        }
-
-
-        protected function runMiddleware($middleware)
-        {
-            if (in_array($middleware, $this->bootedMiddleware)) {
-                return;
-            }
-
-            $this->container->call("$middleware@handle");
-
-            $this->bootedMiddleware[] = $middleware;
-        }
-
-
-        protected function bootServiceProvider($provider)
-        {
-            if (in_array($provider, $this->bootedProviders)) {
-                return;
-            }
-
-            $this->container->call([$provider, 'boot']);
-
-            $this->bootedProviders[] = $provider;
-        }
-
-
-        protected function getServiceProviderInstance(string $provider)
-        {
-            // use the method bellow to use dependency injection
-            // return $this->container->make($provider);
-
-            // or save some CPU-cycles since we only want DI in @boot method
-            return new $provider($this->container);
-        }
-
-
-        protected function markServiceProviderAsRegistered(ServiceProviderInterface $provider)
-        {
-            $this->serviceProviders[] = $provider;
-            $this->loadedProviders[get_class($provider)] = true;
         }
     }

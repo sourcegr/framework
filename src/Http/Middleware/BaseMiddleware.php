@@ -6,17 +6,15 @@
     namespace Sourcegr\Framework\Http\Middleware;
 
 
+    use Sourcegr\Framework\App\AppInterface;
+    use Sourcegr\Framework\Http\Response\ResponseInterface;
 
-    abstract class BaseMiddleware
+    class BaseMiddleware
     {
         protected $app = null;
-        protected $name = null;
 
-        public function setName(string $name) {
-            $this->name = $name;
-        }
-
-        public function setRequestData($name, $value) {
-            $this->app->getRequest()->data->$name = $value;
+        public function __construct(AppInterface $app)
+        {
+            $this->app = $app;
         }
     }

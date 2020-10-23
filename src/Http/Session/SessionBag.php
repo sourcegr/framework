@@ -6,293 +6,333 @@
     namespace Sourcegr\Framework\Http\Session;
 
 
-    use Sourcegr\Framework\Base\Helpers\Arr;
+    use Sourcegr\Framework\Base\Encryptor\EncryptorInterface;
     use Sourcegr\Framework\Base\Helpers\Str;
     use Sourcegr\Framework\Base\ParameterBag;
+    use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Http\BoomException;
+    use Sourcegr\Framework\Http\Response\HTTPResponseCode;
 
-    class SessionBag extends ParameterBag
+
+    class SessionBag extends ParameterBag implements SessionInterface
     {
-        const TOKEN_NAME = '__token';
         const PREVIOUS_URL_NAME = '__previous.url';
+        const FLASH = '__FLASH';
+        const OLD_FLASH_KEY = 'OLD';
+        const NEW_FLASH_KEY = 'NEW';
 
-        protected $handler;
+        public static $tokenName = '__token';
+        public static $userIdName = '__user_id';
+        public $id;
 
-        protected $id;
+        protected $engine;
+
+
         protected $name;
+        protected $encryptor = null;
 
         protected $isStarted = false;
 
-        /**
-         * @return array|mixed
-         */
-        protected function readFromHandler()
-        {
-            if ($data = $this->handler->load($this->getId())) {
-                $data = @unserialize($data);
+        protected $originalSession = '';
 
-                if ($data !== false && !is_null($data) && is_array($data)) {
-                    return $data;
-                }
+
+        public function __construct($engine, $tokenName = '__token', $userIdName = '__user_id', array $parameters = [])
+        {
+            $this->engine = $engine;
+            parent::__construct($parameters);
+
+            static::$tokenName = $tokenName ?? '__token';
+            static::$userIdName = $userIdName ?? '__user_id';
+            $this->set(static::$userIdName, null);
+
+            $this->regenerateToken();
+            $this->setFreshFlash();
+        }
+
+        protected function getFromEngine()
+        {
+            $data = $this->engine->loadData($this->id);
+            if (!$data) {
+                return [];
             }
 
-            return [];
+            $this->originalSession = $this->decryptSessionVars($data);
+            $parsed = json_decode($this->originalSession, true);
+
+            if ($parsed === null) {
+                throw new BoomException(new Boom(HTTPResponseCode::HTTP_UNPROCESSABLE_ENTITY),
+                    'DBSessionEngine: Cannot decode session data');
+            }
+
+            return $parsed;
         }
 
-        /**
-         * SessionBag constructor.
-         *
-         * @param       $handler
-         * @param array $parameters
-         */
-        public function __construct($handler, array $parameters = [])
+        protected function prepareForEngine()
         {
-            $this->handler = $handler;
-            parent::__construct($parameters);
+            $jsonData = json_encode($this->all());
+            if ($jsonData === $this->originalSession) {
+                //save some cpu
+                return null;
+            }
+
+            if ($jsonData === false) {
+                throw new BoomException(new Boom(HTTPResponseCode::HTTP_UNPROCESSABLE_ENTITY),
+                    'DBSessionEngine: Cannot encode session data');
+            }
+
+            if ($this->encryptor) {
+                return $this->encryptor->encrypt($jsonData);
+            }
+
+            return $jsonData;
         }
 
-        /**
-         * @return string $name the name of the session
-         */
-        public function getName()
+        protected function decryptSessionVars($data)
         {
-            return $this->name;
+            if ($this->encryptor) {
+                return $this->encryptor->decrypt($data);
+            }
+
+            return $data;
         }
 
-        /**
-         * @param string $name the name of the session
-         */
-        public function setName($name)
+        public function setEncryptorEngine(EncryptorInterface $encryptor)
         {
-            $this->name = $name;
+            if ($encryptor === null) {
+                $this->encryptor = null;
+            } else {
+                $this->encryptor = $encryptor;
+            }
         }
 
-        /**
-         * @return string $id the ID of the session
-         */
-        public function getId()
+
+        public function getUserIdField()
         {
-            return $this->id;
+            return $this->get(static::$userIdName);
         }
 
-        /**
-         * @param string $id the ID of the session
-         */
+        public function setTokenName(string $tokenName)
+        {
+            static::$tokenName = $tokenName;
+            return $this;
+        }
+
+        public function getToken(): string
+        {
+            return $this->get(static::$tokenName);
+        }
+
+        public function regenerateToken()
+        {
+            $this->set(static::$tokenName, Str::random(40));
+            return $this;
+        }
+
+        public function getTokenName()
+        {
+            return static::$tokenName;
+        }
+
+
         public function setId($id)
         {
             $this->id = $id;
+            return $this;
         }
 
-        public function loadSession() {
-            $this->parameters = $this->add($this->readFromHandler());
-        }
 
-        /**
-         * starts the session
-         *
-         * @return bool
-         * @throws \Exception
-         */
         public function start()
         {
             $this->loadSession();
-            if (!$this->has(self::TOKEN_NAME)) {
+            if (!$this->has(static::$tokenName)) {
                 $this->regenerateToken();
             }
-            return $this->isStarted = true;
-        }
 
-        /**
-         * saves the session using the handler
-         *
-         * @return $this
-         */
-        public function save()
-        {
-            $this->handleFlashData();
-            $this->handler->save(
-                $this->getId(),
-                serialize(Arr::ensureArray($this->parameters))
-            );
-            $this->isStarted = false;
-
+            $this->isStarted = true;
             return $this;
         }
 
-        public function handleFlashData () {
+        public function loadSession()
+        {
+            $parsed = $this->getFromEngine();
 
+            if ($parsed) {
+                $this->add($parsed);
+            }
+            return $this;
         }
 
-        /**
-         * returns all the session data
-         *
-         * @return $this
-         */
+
+        public function getPreviousURL()
+        {
+            return $this->get(self::PREVIOUS_URL_NAME);
+        }
+
+        public function setPreviousUrl($url)
+        {
+            $this->set(self::PREVIOUS_URL_NAME, $url);
+            return $this;
+        }
+
+
         public function all()
         {
-            return $this;
+            return $this->parameters;
         }
 
-
-        /**
-         * gets key and deletes it
-         *
-         * @param      $key
-         * @param null $default
-         *
-         * @return array|mixed|null
-         */
-        public function pull($key, $default = null)
-        {
-            if ($this->has($key)) {
-                $val = $this->get($key);
-                $this->forget($key);
-                return $val;
-            } else {
-                return $default;
-            }
-        }
-
-        /**
-         * @param string $key   the key to add
-         * @param null   $value the value to set
-         *
-         * @return $this
-         */
-        public function put(string $key, $value = null): SessionBag
-        {
-            if (!Arr::isArray($key)) {
-                $key = [$key => $value];
-            }
-            $this->add($key);
-            return $this;
-        }
-
-        /**
-         * gets the token
-         *
-         * @return string
-         */
-        public function token(): string
-        {
-            return $this->get(self::TOKEN_NAME);
-        }
-
-
-        /**
-         * regenerates the token
-         *
-         * @return $this
-         * @throws \Exception
-         */
-        public function regenerateToken(): SessionBag
-        {
-            $this->set(self::TOKEN_NAME, Str::random(40));
-            return $this;
-        }
-
-        /**
-         * removes the key
-         *
-         * @param $keys
-         *
-         * @return $this
-         */
         public function forget($keys)
         {
             $this->remove($keys);
             return $this;
         }
 
-        /**
-         * clears the bag
-         *
-         * @return $this
-         */
         public function flush()
         {
             $this->clear();
             return $this;
         }
 
-        /**
-         * resets the session and restarts it
-         *
-         * @return $this
-         */
-        public function invalidate()
+
+        public function expireFlashData()
         {
-            $this->flush();
-            $this->migrate();
-            // TODO: Implement migrate.
+            $flash = $this->get(static::FLASH);
+            $flash[static::OLD_FLASH_KEY] = $flash[static::NEW_FLASH_KEY];
+            $flash[static::NEW_FLASH_KEY] = [];
+            $this->set(static::FLASH, $flash);
+        }
+
+        public function getFlash($name = null)
+        {
+            $flash = $this->get(static::FLASH);
+            if ($name) {
+                return $flash[static::OLD_FLASH_KEY][$name] ?? null;
+            } else {
+                return $flash[static::OLD_FLASH_KEY];
+            }
+        }
+
+
+        public function setFlash($name, $value)
+        {
+            $flash = $this->get(static::FLASH);
+            $flash[static::NEW_FLASH_KEY][$name] = $value;
+            $this->set(static::FLASH, $flash);
             return $this;
         }
 
-        /**
-         * regenerates session
-         *
-         * @param false $destroy
-         */
-        public function regenerate($destroy = false)
+        public function addFlash($name, $value)
         {
-            $this->migrate($destroy);
-            $this->regenerateToken();
+            $flash = $this->get(static::FLASH);
+            $flash[static::NEW_FLASH_KEY][$name] = $value;
+            $this->set(static::FLASH, $flash);
+            return $this;
         }
 
-        /**
-         * Generate a new ID for the session.
-         *
-         * @param false $destroy whether to destroy
-         *
-         * @return bool
-         * @throws \Exception
-         */
-        public function migrate($destroy = false)
+        public function setFreshFlash()
         {
-            if ($destroy) {
-                $this->handler->destroy($this->getId());
+            $this->set(static::FLASH,
+                [
+                    static::NEW_FLASH_KEY => [],
+                    static::OLD_FLASH_KEY => [],
+                ]);
+
+            return $this;
+        }
+
+        public function persist()
+        {
+            $data = $this->prepareForEngine();
+            if ($data !== null) {
+                $this->engine->persist($this->id, $data);
             }
-            $this->setId(Str::random(40));
-
-            return true;
-        }
-
-        /**
-         * @return bool
-         */
-        public function isStarted()
-        {
-            return $this->isStarted;
-        }
-
-        /**
-         * get the URL of the previous page
-         *
-         * @return array|mixed|null
-         */
-        public function previousURL()
-        {
-            return $this->get(self::PREVIOUS_URL_NAME);
-        }
-
-        /**
-         * set the URL of the previous page
-         *
-         * @param $url
-         *
-         * @return SessionBag
-         */
-        public function setPreviousUrl($url)
-        {
-            return $this->set(self::PREVIOUS_URL_NAME, $url);
-        }
-
-        /**
-         * get the handler
-         *
-         * @return mixed
-         */
-        public function getHandler()
-        {
-            return $this->handler;
         }
     }
+
+
+    //
+
+    //
+    //
+    //        public function save()
+    //        {
+    //            $this->handleFlashData();
+    //            $this->engine->save(
+    //                $this->getId(),
+    //                serialize(Arr::ensureArray($this->parameters))
+    //            );
+    //            $this->isStarted = false;
+    //
+    //            return $this;
+    //        }
+    //
+    //        public function handleFlashData () {
+    //
+    //        }
+    //
+    //
+    //        public function pull($key, $default = null)
+    //        {
+    //            if ($this->has($key)) {
+    //                $val = $this->get($key);
+    //                $this->forget($key);
+    //                return $val;
+    //            } else {
+    //                return $default;
+    //            }
+    //        }
+    //
+    //
+    //
+    //        public function put(string $key, $value = null): SessionBag
+    //        {
+    //            if (!Arr::isArray($key)) {
+    //                $key = [$key => $value];
+    //            }
+    //            $this->add($key);
+    //            return $this;
+    //        }
+    //
+    //
+    //
+
+    //        public function invalidate()
+    //        {
+    //            $this->flush();
+    //            $this->migrate();
+    //            // TODO: Implement migrate.
+    //            return $this;
+    //        }
+    //
+    //
+    //        public function regenerate($destroy = false)
+    //        {
+    //            $this->migrate($destroy);
+    //            $this->regenerateToken();
+    //        }
+    //
+    //
+    //        public function migrate($destroy = false)
+    //        {
+    //            if ($destroy) {
+    //                $this->engine->destroy($this->getId());
+    //            }
+    //            $this->setId(Str::random(40));
+    //
+    //            return true;
+    //        }
+    //
+    //
+    //        public function isStarted()
+    //        {
+    //            return $this->isStarted;
+    //        }
+    //
+    //
+
+    //
+    //
+    //        public function getEngine()
+    //        {
+    //            return $this->engine;
+    //        }
+    //    }
