@@ -10,7 +10,6 @@
 
     class Route implements RouteInterface
     {
-        public const DEFAULT_REALM = 'WEB';
         public const IS_POSITIVE_NUMBER = '/^[1-9][0-9]*$/';
 
         public $callback;
@@ -18,7 +17,6 @@
 
         protected $url;
         protected $prefix;
-        protected $realm = self::DEFAULT_REALM;
         protected $method;
         protected $hasWildcardParameter = false;
         protected $where;
@@ -31,9 +29,8 @@
         }
 
 
-        public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
+        public function __construct($method, $url, $callback, $predicate, $middlewares)
         {
-            $this->realm = $realm ?? self::DEFAULT_REALM;
             $method = is_array($method) ? $method : [$method];
             $this->method = array_map('strtoupper', $method);
             $this->url = trim($url, '/');
@@ -86,12 +83,6 @@
         public function getMiddleware(): array
         {
             return $this->middlewares;
-        }
-
-        public function setRealm(string $realm): Route
-        {
-            $this->realm = $realm ?? self::DEFAULT_REALM;
-            return $this;
         }
 
         public function setPredicate(callable $predicate): Route

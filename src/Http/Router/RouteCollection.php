@@ -12,10 +12,14 @@
 
     class RouteCollection implements RouteCollectionInterface
     {
-        public const DEFAULT_REALM = 'WEB';
-
         protected $routes = [];
-        protected $defaultRealm = self::DEFAULT_REALM;
+
+        public function __construct(callable $creationCallback = null)
+        {
+            if (is_callable($creationCallback)) {
+                $creationCallback($this);
+            }
+        }
 
         protected function callRouteMethod(string $memberMethod, string $param, callable $closure = null)
         {
@@ -26,7 +30,7 @@
                 return;
             }
 
-            $a = new static($this->defaultRealm);
+            $a = new static();
 
             $closure($a);
 
@@ -37,12 +41,12 @@
             $this->routes = $a->routes;
         }
 
-        public function filterRoutes($realm, $method)
+        public function filterRoutes($method)
         {
             $matched = [];
 
             foreach ($this->routes as $route) {
-                if ($realm === $route->getCompiledParam('realm') && in_array($method, $route->getCompiledParam('method'))) {
+                if (in_array($method, $route->getCompiledParam('method'))) {
                     $matched[] = $route;
                 }
             }
@@ -83,11 +87,6 @@
             throw new BoomException(new Boom(HTTPResponseCode::HTTP_NOT_FOUND));
         }
 
-        public function __construct(?string $defaultRealm = null)
-        {
-            $this->defaultRealm = $defaultRealm ?? self::DEFAULT_REALM;
-        }
-
         public function addRoute(
             array $method,
             string $url,
@@ -100,7 +99,7 @@
                 $callback = "$callback@$callbackMethod";
             }
 
-            $r = new Route($this->defaultRealm, $method, $url, $callback, $predicate, $middleware);
+            $r = new Route($method, $url, $callback, $predicate, $middleware);
 //            $r->setCollection($this);
             $this->routes[] = $r;
             return $r;
@@ -117,7 +116,6 @@
             return $this->routes;
         }
 
-
         // parameter setting
         public function setPrefix(string $basePath, callable $closure = null)
         {
@@ -127,11 +125,6 @@
         public function setMiddleware(string $middleware, callable $closure = null)
         {
             return $this->callRouteMethod('setMiddleware', $middleware, $closure);
-        }
-
-        public function setRealm(string $realm, callable $closure = null)
-        {
-            return $this->callRouteMethod('setRealm', $realm, $closure);
         }
 
 
@@ -162,7 +155,7 @@
         }
 
         public function rest($url, $controller) {
-            $r = new RestfullRoute($this->defaultRealm, $controller, $url, null, null, null);
+            $r = new RestfullRoute($controller, $url, null, null, null);
             $this->routes[] = $r;
             return $r;
         }

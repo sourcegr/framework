@@ -56,16 +56,14 @@
             $request = (object)$this->request;
 
             $url = $request->url ?? '/';
-            $realm = $request->realm ?? '';
             $method = $request->method ?? null;
 
-            $this->routeCollection->setRealm($realm, $callback);
-
-            if (is_null($url) || is_null($realm) || is_null($method)) {
-                throw new \Exception('url, realm and method should be provided in the Request object');
+            if (is_null($url) || is_null($method)) {
+                throw new \Exception('url and method should be provided in the Request object');
             }
+            $this->routeCollection = new RouteCollection($callback);
 
-            $activeRoutes = $this->routeCollection->filterRoutes($realm, $method);
+            $activeRoutes = $this->routeCollection->filterRoutes($method);
 
             if (!$activeRoutes) {
                 return new Boom(HTTPResponseCode::HTTP_NOT_FOUND);
@@ -81,7 +79,6 @@
 //
 //                    }
 //                }
-//
 //            }
 
 
