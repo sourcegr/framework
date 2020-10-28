@@ -7,7 +7,6 @@
 
 
     use Sourcegr\Framework\Base\ServiceProviderInterface;
-    use Sourcegr\Framework\Http\Boom;
     use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 

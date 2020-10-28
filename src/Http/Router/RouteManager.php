@@ -68,10 +68,21 @@
             $activeRoutes = $this->routeCollection->filterRoutes($realm, $method);
 
             if (!$activeRoutes) {
-                return $this->routeCollection->getFourOhFour();
+                return new Boom(HTTPResponseCode::HTTP_NOT_FOUND);
             }
 
-            [$exactRoutes, $parameterRoutes] = $this->routeCollection->routesByType($activeRoutes);
+            [$restfullRoutes, $exactRoutes, $parameterRoutes] = $this->routeCollection->routesByType($activeRoutes);
+
+            // first check for restfull controllers
+            /** @var RestfullRoute $route */
+//            foreach ($restfullRoutes as $route) {
+//                if (strpos($route->getCompiledParam('url'), $url) === 0) {
+//                    if ($route->hasMethod($method)) {
+//
+//                    }
+//                }
+//
+//            }
 
 
             /** @var Route $route */
@@ -84,6 +95,7 @@
                     return $matched;
                 }
             }
+
 
 
             if (count($parameterRoutes)) {

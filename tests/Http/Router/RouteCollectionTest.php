@@ -172,7 +172,7 @@
             $coll->GET('dynamic1/#required_param', $this->noop());
             $coll->GET('dynamic2/#required_param/?optional_param', $this->noop());
 
-            [$withoutParams, $withParams] = $coll->routesByType();
+            [$apiroutes, $withoutParams, $withParams] = $coll->routesByType();
             $this->assertCount(3, $withoutParams, 'withoutParams is wrong');
             $this->assertCount(2, $withParams, 'withParams is wrong');
 

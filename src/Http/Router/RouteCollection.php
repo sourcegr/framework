@@ -55,19 +55,27 @@
             $routes = $routes ?? $this->routes;
             $withParams = [];
             $withoutParams = [];
+            $restfull = [];
 
 
             /** @var Route $route */
             foreach ($routes as $route) {
                 $url = $route->getCompiledParam('url');
+
+                if ($route instanceof RestfullRoute) {
+                    $restfull[$url] = $route;
+                    continue;
+                }
+
                 if (strpos($url, '#') !== false || strpos($url, '?') !== false) {
                     $withParams[$url] = $route;
-                } else {
-                    $withoutParams[$url] = $route;
+                    continue;
                 }
+
+                $withoutParams[$url] = $route;
             }
 
-            return [$withoutParams, $withParams];
+            return [$restfull, $withoutParams, $withParams];
         }
 
         public function getFourOhFour()
@@ -113,20 +121,17 @@
         // parameter setting
         public function setPrefix(string $basePath, callable $closure = null)
         {
-            $this->callRouteMethod('setPrefix', $basePath, $closure);
-            return $this;
+            return $this->callRouteMethod('setPrefix', $basePath, $closure);
         }
 
         public function setMiddleware(string $middleware, callable $closure = null)
         {
-            $this->callRouteMethod('setMiddleware', $middleware, $closure);
-            return $this;
+            return $this->callRouteMethod('setMiddleware', $middleware, $closure);
         }
 
         public function setRealm(string $realm, callable $closure = null)
         {
-            $this->callRouteMethod('setRealm', $realm, $closure);
-            return $this;
+            return $this->callRouteMethod('setRealm', $realm, $closure);
         }
 
 
@@ -154,6 +159,12 @@
         public function DELETE($url, $callback, $method = null)
         {
             return $this->addRoute(['DELETE'], $url, $callback, $method);
+        }
+
+        public function rest($url, $controller) {
+            $r = new RestfullRoute($this->defaultRealm, $controller, $url, null, null, null);
+            $this->routes[] = $r;
+            return $r;
         }
 
         /*

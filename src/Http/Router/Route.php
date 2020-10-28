@@ -16,7 +16,7 @@
         public $callback;
         public $routeSegments = null;
 
-        protected $url = [];
+        protected $url;
         protected $prefix;
         protected $realm = self::DEFAULT_REALM;
         protected $method;
@@ -25,6 +25,10 @@
         protected $predicates = [];
         protected $middlewares = [];
 
+        protected function getURL()
+        {
+            return $this->prefix . $this->url;
+        }
 
 
         public function __construct($realm, $method, $url, $callback, $predicate, $middlewares)
@@ -59,7 +63,7 @@
         public function getCompiledParam(string $param)
         {
             return $param === 'url' ?
-                ($this->prefix . $this->url) :
+                $this->getURL() :
                 $this->$param ?? null;
         }
 

@@ -96,7 +96,7 @@
             return $data;
         }
 
-        public function setEncryptorEngine(EncryptorInterface $encryptor)
+        public function setEncryptorEngine(EncryptorInterface $encryptor = null)
         {
             if ($encryptor === null) {
                 $this->encryptor = null;

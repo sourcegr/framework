@@ -101,7 +101,6 @@
             };
 
             $actual = $manager->matchRoute($this->routes);
-
             $this->assertInstanceOf(RouteMatch::class, $actual);
             $this->assertIsArray($actual->vars, 'Expected vars to be Array');
             $this->assertCount(1, $actual->vars, 'Expected vars to have exactly one member');

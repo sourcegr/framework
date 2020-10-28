@@ -13,7 +13,20 @@
     {
         public $statusCode = HTTPResponseCode::HTTP_TEMPORARY_REDIRECT;
 
-        public function __construct($url, $immediate = false, $payload = null, $headers = [])
+
+        public function to($url) {
+            $this->headers->add('Location', $url);
+            return $this;
+        }
+
+
+        public function now() {
+            $this->setPayload(['immediate' => true]);
+            return $this;
+        }
+
+
+        public function __construct($url = null, $immediate = false, $payload = null, $headers = [])
         {
             $headers = Arr::ensureArray($headers);
 
@@ -27,5 +40,10 @@
 
             $this->headers->add($headers);
             $this->headers->add('Location', $url);
+        }
+
+
+        public function with($flashName, $flashData) {
+            return parent::withFlash($flashName, $flashData);
         }
     }
