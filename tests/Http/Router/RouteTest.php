@@ -13,7 +13,7 @@
 
         private function init($url = self::ROUTE)
         {
-            return new Route('REALM', 'GET', $url, $this->noop(), null, null);
+            return new Route('GET', $url, $this->noop(), null, null);
         }
 
         private function noop()
@@ -27,7 +27,7 @@
             $method = 'get';
             $url = '/this/is/the/route/';
 
-            $route = new Route(null, $method, $url, $this->noop(), null, null);
+            $route = new Route($method, $url, $this->noop(), null, null);
 
             $actual = $route->getCompiledParam('method');
             $expected = [strtoupper($method)];

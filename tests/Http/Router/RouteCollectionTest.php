@@ -24,33 +24,7 @@
             };
         }
 
-        public function testCreation(){
-            $coll = new DebugRouteCollection();
 
-            $actual = $coll->getProp('defaultRealm');
-            $expected = RouteCollection::DEFAULT_REALM;
-
-            $this->assertEquals($expected, $actual, 'Creation failure');
-        }
-
-        public function testCreationWithRealm(){
-            $r = 'MYREALM';
-            $coll = new DebugRouteCollection($r);
-
-            $actual = $coll->getProp('defaultRealm');
-            $expected = $r;
-
-            $this->assertEquals($expected, $actual, 'Creation with realm failure');
-        }
-
-        public function testCreationWithNullRealm(){
-            $coll = new DebugRouteCollection(null);
-
-            $actual = $coll->getProp('defaultRealm');
-            $expected = RouteCollection::DEFAULT_REALM;
-
-            $this->assertEquals($expected, $actual, 'Creation with realm failure');
-        }
 
         public function testMETHODS() {
             $coll = new DebugRouteCollection(null);
@@ -113,10 +87,6 @@
             $expected = 'ROOT/' . self::ROUTE;
             $this->assertEquals($expected, $route->getCompiledParam('url'), 'URL should not be this when setPrefix');
 
-            $coll->setRealm('NEW REALM');
-            $expected = 'NEW REALM';
-            $this->assertEquals($expected, $route->getCompiledParam('realm'), 'REALM should not be this when setRealm');
-
             $coll->setMiddleware('new middleware');
             $expected = ['new middleware'];
             $this->assertEquals($expected, $route->getCompiledParam('middlewares'), 'Middlewares should not be this when setMiddleware');
@@ -138,17 +108,6 @@
 
             $expected = 'ROOT/' . self::ROUTE;
             $this->assertEquals($expected, $route->getCompiledParam('url'), 'middleware should not be this when setMiddleware');
-
-
-            #realm
-            $coll->setRealm('NEW_REALM', function(RouteCollection $routeCollection) {
-                $routeCollection->GET(self::ROUTE, $this->noop());
-            });
-
-            $route = $coll->getRoutes()[0];
-            $expected = 'NEW_REALM';
-            $this->assertEquals($expected, $route->getCompiledParam('realm'), 'REALM should not be this when setRealm');
-
 
             #middleware
             $coll->setMiddleware('new middleware', function(RouteCollection $routeCollection) {
@@ -189,24 +148,24 @@
         {
             $coll = new DebugRouteCollection(null);
 
-            $routeGet1 = $coll->GET('static1', $this->noop())->setRealm('REALM1');
-            $routeGet2 = $coll->GET('static2', $this->noop())->setRealm('REALM1');
-            $routePost1 = $coll->POST('static3', $this->noop())->setRealm('REALM1');
+            $routeGet1 = $coll->GET('static1', $this->noop());
+            $routeGet2 = $coll->GET('static2', $this->noop());
+            $routePost1 = $coll->POST('static3', $this->noop());
 
             // the bellow SHOULD be filtered out
-            $coll->GET('dynamic1/#required_param', $this->noop());
-            $coll->GET('dynamic2/#required_param/?optional_param', $this->noop());
+            $coll->PUT('dynamic1/#required_param', $this->noop());
+            $coll->PUT('dynamic2/#required_param/?optional_param', $this->noop());
 
 
-            $REALM1_GET = $coll->filterRoutes('REALM1', 'GET');
-            $REALM1_POST = $coll->filterRoutes('REALM1', 'POST');
+            $GET = $coll->filterRoutes('GET');
+            $POST = $coll->filterRoutes('POST');
 
-            $this->assertCount(2, $REALM1_GET, 'REALM1_GET count should be 2');
-            $this->assertCount(1, $REALM1_POST, 'REALM1_POST count should be 1');
+            $this->assertCount(2, $GET, 'GET count should be 2');
+            $this->assertCount(1, $POST, 'POST count should be 1');
 
-            $this->assertContains($routeGet1, $REALM1_GET, 'REALM1_GET should contain routeGet1');
-            $this->assertContains($routeGet2, $REALM1_GET, 'REALM1_GET should contain routeGet2');
-            $this->assertContains($routePost1, $REALM1_POST, 'REALM1_POST should contain routePost1');
+            $this->assertContains($routeGet1, $GET, 'GET should contain routeGet1');
+            $this->assertContains($routeGet2, $GET, 'GET should contain routeGet2');
+            $this->assertContains($routePost1, $POST, 'POST should contain routePost1');
         }
     }
 
