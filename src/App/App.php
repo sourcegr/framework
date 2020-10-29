@@ -7,6 +7,9 @@
 
 
     use Sourcegr\Framework\Base\ServiceProviderInterface;
+    use Sourcegr\Framework\Base\View\Renderable;
+    use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Http\Redirect\Redirect;
     use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
@@ -187,5 +190,46 @@
             if (is_callable($callback)) {
                 $this->shutDownCallbacks[] = $callback;
             }
+        }
+
+        public function prepareForShutdown()
+        {
+            foreach ($this->getShutDownCallbacks() as $callback) {
+                $this->container->call($callback);
+            }
+        }
+
+        public function shutDown()
+        {
+            header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + (7 * 24 * 60 * 60))); // 1 week
+            header("Cache-Control: no-cache");
+            header("Pragma: no-cache");
+
+            http_response_code($this->response->statusCode);
+
+            foreach ($this->response->headers as $headerName => $headerValue) {
+                header("$headerName: $headerValue");
+            }
+
+            $response = $this->response->makeResponse();
+
+
+            if ($response instanceof Renderable) {
+                die($response->getOutput());
+            }
+
+            if ($response instanceof Redirect) {
+                die();
+            }
+
+            if ($response instanceof Boom) {
+                if ($this->request->expectsJson()) {
+                    die(json_encode($response, JSON_UNESCAPED_UNICODE));
+                }
+                die($response->message);
+            }
+
+            http_response_code($this->response->statusCode);
+            die($response);
         }
     }
