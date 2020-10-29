@@ -9,7 +9,7 @@
     use Sourcegr\Framework\Base\Helpers\Arr;
     use Sourcegr\Framework\Base\Helpers\Str;
 
-    class View
+    class View implements Renderable
     {
         public $viewsDir = __DIR__ . '/views';
         public $cacheDir = __DIR__ . '/cache';
@@ -32,8 +32,6 @@
         ];
 
 
-
-
         public function __construct($viewsDir, $cacheDir, $filename, $isSubView = false)
         {
             $this->viewsDir = $viewsDir ?? $this->viewsDir;
@@ -48,14 +46,16 @@
         }
 
 
-        protected function callbackInclude($matches) {
+        protected function callbackInclude($matches)
+        {
             $filename = $matches[1];
             $inc = new static($this->viewsDir, $this->cacheDir, $filename, true);
             return $inc->getTemplate();
         }
 
 
-        protected function each($contents) {
+        protected function each($contents)
+        {
             $contents = preg_replace('/@foreach(.*)/', '<?php foreach ${1} :?>', $contents);
             $contents = preg_replace('/@elseif(.*)/', '<?php elseif ${1} :?>', $contents);
             $contents = preg_replace('/@if(.*)/', '<?php if ${1} :?>', $contents);
@@ -65,7 +65,8 @@
         }
 
 
-        public function getTemplate() {
+        public function getTemplate()
+        {
             return $this->template;
         }
 
@@ -90,11 +91,11 @@
         }
 
 
-        public function with($name, $value=null)
+        public function with($name, $value = null)
         {
             if (Arr::is($name)) {
                 foreach ($name as $key => $value) {
-                     $this->addParam($key, $value);
+                    $this->addParam($key, $value);
                 }
 
                 return $this;
@@ -103,13 +104,14 @@
             return $this->addParam($name, $value);
         }
 
-        protected function addParam($name, $value=null) {
+        protected function addParam($name, $value = null)
+        {
             $this->params[$name] = $value;
             return $this;
         }
 
 
-        public function render()
+        public function getOutput(...$params) : string
         {
             extract($this->params ?? []);
 
@@ -120,5 +122,11 @@
             ob_end_clean();
 
             return $contents;
+        }
+
+
+        public function render(...$params): string
+        {
+            echo $this->getOutput(...$params);
         }
     }
