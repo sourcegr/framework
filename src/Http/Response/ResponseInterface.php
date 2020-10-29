@@ -10,11 +10,13 @@
     {
         public function init();
 
+        public function makeResponse();
+
         public function header($name, $value);
 
         public function addHeaders($headers);
 
-        public function json($data);
+//        public function json($data);
 
         public function sendFile($file);
 

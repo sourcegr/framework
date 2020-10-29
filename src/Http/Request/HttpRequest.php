@@ -28,7 +28,9 @@
         protected $fileBag;
         protected $serverBag;
         protected $headerBag;
+        protected $accepts;
 
+        protected $expectsJSON = false;
 
         /**
          * the session data
@@ -93,12 +95,32 @@
             $this->headerBag = new ParameterBag(Helpers::getRequestHeaders());
 
             $this->method = strtoupper($this->serverBag->get('REQUEST_METHOD', 'GET'));
+            $this->createAccepts();
+        }
+
+        protected function createAccepts() {
+            $all = explode(',', str_replace(' ', '', $this->serverBag->get('HTTP_ACCEPT') ?? ''));
+
+
+            foreach ($all as $accept) {
+                $accept = "$accept;q=1";
+                [$type, $quality] = explode(';q=', $accept);
+                $accepts[$type] = $quality;
+            }
+//            dd($accepts);
+
+            arsort($accepts, SORT_NUMERIC);
+            $this->accepts = $accepts;
+            $this->expectsJSON = $accepts[array_key_first($accepts)] === 'application/json';
         }
 
         public static function fromHTTP(): RequestInterface
         {
             $url = explode('?', $_SERVER['REQUEST_URI'])[0];
             $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
+
+
+
             return $request;
         }
 
@@ -143,8 +165,7 @@
 
         public function expectsJson(): bool
         {
-            $accepts = explode(',', ($this->serverBag->get('HTTP_ACCEPT') ?? ''));
-            return $accepts[0] === 'application/json';
+            return $this->expectsJSON;
         }
 
         public function getMethod(): string

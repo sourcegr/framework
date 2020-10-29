@@ -6,6 +6,9 @@
     namespace Sourcegr\Framework\Http\Response;
 
 
+    use Sourcegr\Framework\Base\View\Renderable;
+    use Sourcegr\Framework\Http\Boom;
+
     class HttpResponse implements ResponseInterface
     {
         public $statusCode = 200;
@@ -17,12 +20,11 @@
          */
         public $headers = null;
 
-        public $textContent = '';
+        public $responseContent = '';
 
         public $status = '';
 
         public $cookies = null;
-
 
 
         protected $sessionCookieParameters;
@@ -63,13 +65,6 @@
             return $this;
         }
 
-
-        public function json($data)
-        {
-            $this->textContent = json_encode($data);
-        }
-
-
         public function sendFile($file)
         {
         }
@@ -85,6 +80,29 @@
             // TODO: Implement init() method.
         }
 
+        public function makeResponse()
+        {
+            $content = $this->responseContent;
+
+            if ($content instanceof Boom) {
+                // check if boom has any headers, and add them to the response
+                $this->headers->add($content->getHeaders());
+                $this->statusCode = $content->statusCode;
+                return $content;
+            }
+
+            if ($content instanceof Renderable) {
+                return $content->getOutput();
+            }
+
+            if (is_array($content)) {
+                return json_encode($content, JSON_UNESCAPED_UNICODE);
+            }
+
+            if (is_string($content) || is_numeric($content)) {
+                return "" . $content;
+            }
+        }
 
         public function setCookieBag($cookieBag)
         {

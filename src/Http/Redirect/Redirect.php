@@ -21,22 +21,18 @@
 
 
         public function now() {
-            $this->setPayload(['immediate' => true]);
+            $this->halt = true;
             return $this;
         }
 
 
-        public function __construct($url = null, $immediate = false, $payload = null, $headers = [])
+        public function __construct($url = null, $haltsExecution = false, $payload = null, $headers = [])
         {
             $headers = Arr::ensureArray($headers);
 
             $payload = $payload ?? [];
 
-            if (!is_null($immediate)) {
-                $payload['immediate'] = $immediate;
-            }
-
-            parent::__construct($this->statusCode, $payload);
+            parent::__construct($this->statusCode, '', $payload, $haltsExecution);
 
             $this->headers->add($headers);
             $this->headers->add('Location', $url);

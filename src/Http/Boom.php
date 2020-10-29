@@ -6,11 +6,12 @@
     namespace Sourcegr\Framework\Http;
 
 
+    use JsonSerializable;
     use Sourcegr\Framework\Base\ParameterBag;
     use Sourcegr\Framework\Http\Response\HeaderBag;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
 
-    class Boom
+    class Boom implements JsonSerializable
     {
         public $statusCode = 500;
         public $payload;
@@ -19,11 +20,15 @@
         public $headers;
         public $flash;
 
-        public function __construct($statusCode = HTTPResponseCode::HTTP_OK, $payload = null)
+        protected $halt = false;
+
+        public function __construct($statusCode = HTTPResponseCode::HTTP_OK, $message='', $payload = null, $haltsExecution = false)
         {
             $this->setStatusCode($statusCode);
+            $this->message = $message;
             $this->payload = $payload;
             $this->headers = new HeaderBag();
+            $this->halt = $haltsExecution;
             $this->flash = new ParameterBag();
         }
 
@@ -74,7 +79,23 @@
         public function setStatusCode(int $statusCode): Boom
         {
             $this->statusCode = $statusCode;
-            $this->setMessage(HTTPResponseCode::$statusTexts[$statusCode]);
+            if ($this->message === '') {
+                $this->message = HTTPResponseCode::$statusTexts[$statusCode];
+            }
             return $this;
+        }
+
+
+        public function haltsExecution():bool {
+            return $this->halt;
+        }
+
+        public function jsonSerialize()
+        {
+            return [
+                'code' => $this->statusCode,
+                'message' => $this->message,
+                'payload' => $this->payload
+            ];
         }
     }
