@@ -1,0 +1,21 @@
+{
+    "name": "sourcegr/query-builder",
+    "type": "library",
+    "description": "QB is a query builder for easy SQL queries.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vagelis Papas",
+            "email": "papas@source.gr"
+        }
+    ],
+    "require": {
+        "ext-pdo": "*"
+    },
+    "autoload": {
+        "psr-4": {"Sourcegr\\QueryBuilder\\": "src/"}
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.3"
+    }
+}
