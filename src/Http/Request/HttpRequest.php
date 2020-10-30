@@ -111,7 +111,7 @@
 
             arsort($accepts, SORT_NUMERIC);
             $this->accepts = $accepts;
-            $this->expectsJSON = $accepts[array_key_first($accepts)] === 'application/json';
+            $this->expectsJSON = $accepts['application/json'] ? true : false;
         }
 
         public static function fromHTTP(): RequestInterface
