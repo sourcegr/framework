@@ -21,4 +21,14 @@
             $str = str_replace(['/', '+', '='], '', base64_encode(random_bytes($size*2)));
             return substr($str, 0, $size);
         }
+
+        public static function startsWith(string $haystack, string $needle)
+        {
+            return strncmp($haystack, $needle, strlen($needle)) === 0;
+        }
+
+        public static function endsWith(string $haystack, string $needle)
+        {
+            return $needle !== '' && substr($haystack, -strlen($needle)) === $needle;
+        }
     }
