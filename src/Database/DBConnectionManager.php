@@ -71,8 +71,7 @@
                 return $PDOConnection;
 
             } catch(\Exception $e){
-                var_dump($e);
-                throw new DBConnectionErrorException("Cannot create named connection $name");
+                throw new DBConnectionErrorException($e->getMessage());
             }
         }
 
