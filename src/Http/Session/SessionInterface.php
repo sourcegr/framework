@@ -16,6 +16,7 @@
         public function getTokenName();
         public function setId($id);
         public function start();
+        public function regenerate();
         public function loadSession();
         public function getPreviousURL();
         public function setPreviousUrl($url);
@@ -27,6 +28,7 @@
         public function setFlash($name, $value);
         public function setFreshFlash();
         public function persist();
+        public function destroy();
     }
 
     //

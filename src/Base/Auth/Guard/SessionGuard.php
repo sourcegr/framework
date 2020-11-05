@@ -7,6 +7,8 @@
 
 
     use Sourcegr\Framework\Http\Request\RequestInterface;
+    use Sourcegr\Framework\Http\Session\SessionBag;
+    use Sourcegr\Framework\Http\Session\SessionInterface;
 
     class SessionGuard implements GuardInterface
     {
@@ -14,14 +16,30 @@
 
 
         public $authProvider = null;
-        public $request = null;
+        public $session = null;
         public $user = null;
 
 
-
-        public function __construct(RequestInterface $request)
+        public function __construct(SessionInterface $session)
         {
-            $this->request = $request;
+            $this->session = $session;
+        }
+
+        public function authProvider()
+        {
+            return $this->authProvider;
+        }
+
+        public function authenticate(array $credentials = [])
+        {
+            $result = $this->authProvider->checkUser($credentials);
+
+            $this->user = $result;
+
+            if ($result) {
+                $this->session->setUserId($this->authProvider->getLoggedUserId($this->user));
+            }
+            return $this->user;
         }
 
         public function user()
@@ -36,12 +54,18 @@
 
             $user = null;
             // try to get by id field in the Session
-            $id = $this->request->session->getUserIdField();
+
+            $id = $this->session->getUserId();
 
             if ($id) {
                 $user = $this->authProvider->getUserById($id);
             }
 
-            return $this->$user = $user;
+            return $this->user = $user;
+        }
+
+        public function logout() {
+            $this->session->setUserId(null);
+            $this->session->regenerateToken();
         }
     }

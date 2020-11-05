@@ -22,7 +22,10 @@
         const NEW_FLASH_KEY = 'NEW';
 
         public static $tokenName = '__token';
+        public static $csrfName = '__csrf';
+
         public static $userIdName = '__user_id';
+
         public $id;
 
         protected $engine;
@@ -36,17 +39,24 @@
         protected $originalSession = '';
 
 
-        public function __construct($engine, $tokenName = '__token', $userIdName = '__user_id', array $parameters = [])
-        {
+        public function __construct(
+            $engine,
+            $csrfName = null,
+            $tokenName = null,
+            $userIdName = null,
+            array $parameters = []
+        ) {
             $this->engine = $engine;
             parent::__construct($parameters);
 
-            static::$tokenName = $tokenName ?? '__token';
-            static::$userIdName = $userIdName ?? '__user_id';
+            static::$tokenName = $tokenName ?? static::$tokenName;
+            static::$userIdName = $userIdName ?? static::$userIdName;
+            static::$csrfName = $csrfName ?? static::$csrfName;
+
             $this->set(static::$userIdName, null);
 
-            $this->regenerateToken();
             $this->setFreshFlash();
+//            dd($this->getFromEngine());
         }
 
         protected function getFromEngine()
@@ -108,12 +118,41 @@
 
         public function getUserIdField()
         {
+            return static::$userIdName;
+        }
+
+        public function setUserId($id)
+        {
+            $this->set(static::$userIdName, $id);
+            return $this;
+        }
+
+        public function getUserId()
+        {
             return $this->get(static::$userIdName);
         }
 
-        public function setTokenName(string $tokenName)
+
+        public function getCSRFFieldName()
         {
-            static::$tokenName = $tokenName;
+            return static::$csrfName;
+        }
+
+        public function setCSRF($csrf)
+        {
+            $this->set(static::$csrfName, $csrf);
+            return $this;
+        }
+
+        public function getCSRF()
+        {
+            return $this->get(static::$csrfName);
+        }
+
+
+        public function regenerateToken()
+        {
+            $this->set(static::$tokenName, Str::random(40));
             return $this;
         }
 
@@ -122,9 +161,10 @@
             return $this->get(static::$tokenName);
         }
 
-        public function regenerateToken()
+
+        public function setTokenName(string $tokenName)
         {
-            $this->set(static::$tokenName, Str::random(40));
+            static::$tokenName = $tokenName;
             return $this;
         }
 
@@ -159,6 +199,7 @@
             if ($parsed) {
                 $this->add($parsed);
             }
+
             return $this;
         }
 
@@ -245,6 +286,15 @@
             if ($data !== null) {
                 $this->engine->persist($this->id, $data);
             }
+        }
+
+        public function destroy() {
+
+        }
+
+        public function regenerate()
+        {
+            // TODO: Implement regenerate() method.
         }
     }
 

@@ -33,11 +33,6 @@
             // TODO: Implement id() method.
         }
 
-        public function validate(array $credentials = [])
-        {
-            return $this->authProvider->validate($credentials);
-        }
-
         public function setUser($user)
         {
             $this->user = $user;

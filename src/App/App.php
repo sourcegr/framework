@@ -205,31 +205,29 @@
             header("Cache-Control: no-cache");
             header("Pragma: no-cache");
 
-            http_response_code($this->response->statusCode);
 
+            $response = $this->response->makeResponse();
+//            dd("I DIE!", $response);
+
+            http_response_code($this->response->statusCode);
             foreach ($this->response->headers as $headerName => $headerValue) {
                 header("$headerName: $headerValue");
             }
+//dd($this->request->session->getToken());
 
-            $response = $this->response->makeResponse();
-
-
-            if ($response instanceof Renderable) {
-                die($response->getOutput());
-            }
 
             if ($response instanceof Redirect) {
                 die();
             }
 
             if ($response instanceof Boom) {
+//                dd('will shut now');
                 if ($this->request->expectsJson()) {
                     die(json_encode($response, JSON_UNESCAPED_UNICODE));
                 }
                 die($response->message);
             }
 
-            http_response_code($this->response->statusCode);
             die($response);
         }
     }

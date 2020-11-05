@@ -58,7 +58,7 @@
         }
 
 
-        protected function addGlobalParam($name, $value=null) {
+        public function addGlobalParam($name, $value=null) {
             $this->globals[$name] = $value;
             return $this;
         }

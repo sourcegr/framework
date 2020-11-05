@@ -35,6 +35,10 @@
         {
             return $this->user ? true : false;
         }
+        public function isGuest(): bool
+        {
+            return $this->user ? false : true;
+        }
 
         public function getUser()
         {

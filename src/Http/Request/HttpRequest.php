@@ -71,10 +71,6 @@
         public $auth = null;
 
 
-
-
-
-
         public function __construct(
             string $url = '',
             array $get = [],
@@ -98,7 +94,8 @@
             $this->createAccepts();
         }
 
-        protected function createAccepts() {
+        protected function createAccepts()
+        {
             $all = explode(',', str_replace(' ', '', $this->serverBag->get('HTTP_ACCEPT') ?? ''));
 
 
@@ -111,7 +108,7 @@
 
             arsort($accepts, SORT_NUMERIC);
             $this->accepts = $accepts;
-            $this->expectsJSON = $accepts['application/json'] ? true : false;
+            $this->expectsJSON = isset($accepts['application/json']) ? true : false;
         }
 
         public static function fromHTTP(): RequestInterface
@@ -120,10 +117,8 @@
             $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
 
 
-
             return $request;
         }
-
 
 
         protected function createFileBag(array $files): array
@@ -151,12 +146,6 @@
         }
 
 
-
-        /**
-         * @param string $realm
-         *
-         * @return RequestInterface
-         */
         public function setRealm(string $realm): RequestInterface
         {
             $this->realm = $realm;
@@ -212,12 +201,13 @@
             $this->session->setFlash($name, $value);
         }
 
-        public function addFlash($flashNameOrArray, $flashData = null) {
+        public function addFlash($flashNameOrArray, $flashData = null)
+        {
             if (!is_null($flashData)) {
                 $flashNameOrArray = [$flashNameOrArray => $flashData];
             }
 
-            foreach ($flashNameOrArray as $name=>$value) {
+            foreach ($flashNameOrArray as $name => $value) {
                 $this->session->addFlash($name, $value);
             }
 

@@ -11,7 +11,7 @@
 
     class Redirect extends Boom
     {
-        public $statusCode = HTTPResponseCode::HTTP_TEMPORARY_REDIRECT;
+        public $statusCode = HTTPResponseCode::HTTP_FOUND;
 
 
         public function to($url) {

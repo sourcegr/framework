@@ -47,13 +47,14 @@
             return $result[0];
         }
 
-        public function createUserToken($user) {
-            // todo create the token to be sent to the user. Could this be JWT?
-        }
-
         public function setQueryBuilder($queryBuilder)
         {
             $this->queryBuilder = $queryBuilder;
+        }
+
+
+        public function createUserToken($user) {
+            // todo create the token to be sent to the user. Could this be JWT?
         }
 
         public function setHasher($hasher)
@@ -61,7 +62,7 @@
             $this->hasher = $hasher;
         }
 
-        public function authenticate(array $credentials)
+        public function checkUser(array $credentials)
         {
             $dbField = $credentials[$this->loginField] ?? 'email';
             $password = $credentials[$this->passwordField] ?? 'password';
@@ -78,17 +79,17 @@
 
             $success = $this->hasher->checkHash($password, $encryptedPassword);
 
-            if ($success) {
-                return $this->user = $user;
-            }
-
-            return false;
+            return $success ? $user : false;
         }
 
         public function getUserById($id)
         {
             $id = (int)$id;
             return $this->getUserResult($this->QB()->where($this->idField, $id)->select());
+        }
+
+        public function getLoggedUserId($user) {
+            return $user[$this->idField];
         }
 
         public function getUserByToken($token)

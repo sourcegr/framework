@@ -20,8 +20,8 @@
 
 
         protected static $map = [
-            '{!' => '<?=',
-            '!}' => '?>',
+            '{!!' => '<?=',
+            '!!}' => '?>',
             '{{' => '<?=htmlspecialchars(',
             '}}' => ', ENT_NOQUOTES, \'UTF-8\', true)?>',
             '@endforeach' => '<?php endforeach; ?>',

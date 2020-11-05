@@ -19,7 +19,7 @@
 
         public function id();
 
-        public function validate(array $credentials = []);
+        public function authenticate(array $credentials = []);
 
         public function setUser($user);
     }

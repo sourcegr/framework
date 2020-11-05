@@ -37,7 +37,7 @@
                 $engine = new DBSessionEngine($connection, $conf['table']);
             }
 
-            $this->sessionBag = new SessionBag($engine, $config['TOKEN_NAME'], $config['USER_ID_FIELD']);
+            $this->sessionBag = new SessionBag($engine, $config['CSRF_NAME'] ?? null, $config['TOKEN_NAME'] ?? null, $config['USER_ID_FIELD'] ?? null);
 
             if ($config['ENCRYPT']) {
                 $this->sessionBag->setEncryptorEngine($this->container->get(EncryptorInterface::class));
@@ -54,7 +54,9 @@
 
             if (!$id) {
                 $newId = Str::random(40);
+                $newCSRF = Str::random(40);
                 $request->session->setId($newId);
+                $request->session->setCSRF($newCSRF);
                 $request->session->persist();
                 $this->container->get('RESPONSE')->setSessionCookie($newId);
             } else {
@@ -62,5 +64,7 @@
                 $request->session->setId($id);
                 $request->session->start();
             }
+
+            return $this->sessionBag;
         }
     }
