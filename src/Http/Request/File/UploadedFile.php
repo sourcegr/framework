@@ -1,5 +1,7 @@
 <?php
 
+    declare(strict_types=1);
+
 
     namespace Sourcegr\Framework\Http\Request\File;
 
@@ -34,9 +36,5 @@
             $this->size = $file['size'];
 
             $pathParts = pathinfo($file['tmp_name']);
-        }
-
-        public function moveTo($newPath, $newFilename = null) {
-
         }
     }
