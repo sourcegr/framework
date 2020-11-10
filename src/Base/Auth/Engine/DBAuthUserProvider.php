@@ -24,6 +24,7 @@
          */
         protected $hasher;
 
+
         public function __construct($config, $hasher = null, $queryBuilder = null)
         {
             parent::__construct($config);
@@ -78,18 +79,26 @@
 
 
             $success = $this->hasher->checkHash($password, $encryptedPassword);
+//            dd($user);
 
             return $success ? $user : false;
+        }
+
+        public function setToken($user, $token)
+        {
+            $this->QB()->where($this->idField, $user[$this->idField])->update('token', $token);
+            return $this;
+        }
+
+
+        public function getLoggedUserId($user) {
+            return $user[$this->idField];
         }
 
         public function getUserById($id)
         {
             $id = (int)$id;
             return $this->getUserResult($this->QB()->where($this->idField, $id)->select());
-        }
-
-        public function getLoggedUserId($user) {
-            return $user[$this->idField];
         }
 
         public function getUserByToken($token)
