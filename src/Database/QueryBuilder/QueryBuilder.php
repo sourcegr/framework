@@ -259,6 +259,36 @@
         }
 
 
+        public function max($col)
+        {
+            return $this->columns("MAX($col) as max")->first()['max'];
+        }
+
+        public function min($col)
+        {
+            return $this->columns("MIN($col) AS min")->first()['min'];
+        }
+
+        public function groupCount($groupCol)
+        {
+            $final = [];
+            $res = $this->groupBy("$groupCol")->select("$groupCol, COUNT(*) as count");
+            foreach ($res as $result) {
+                $final[$result[$groupCol]] = $result['count'];
+            }
+            return $final;
+        }
+
+        public function count()
+        {
+            return $this->select("COUNT(*) AS count");
+        }
+
+        public function find($id, $idName = 'id')
+        {
+            return $this->where($idName, $id)->first();
+        }
+
         public function select($fields = null)
         {
             if ($fields) {
@@ -270,11 +300,11 @@
         }
 
 
-        public function first($count = 1, $fields = null)
+        public function first($fields = null)
         {
             $res = $this->select($fields);
             if (is_array($res)) {
-                return array_slice($res[0], 0, $count);
+                return $res[0];
             }
             return null;
         }
@@ -347,7 +377,6 @@
                 throw new InvalidArgumentException('The parameter for the insert function should be a non-empty associative array');
             }
 
-//        $PLACEHOLDER = $this->grammar->getPlaceholder;
             $PLACEHOLDER = [$this->grammar, 'getPlaceholder'];
 
             $columns = [];
