@@ -161,6 +161,11 @@
             return $this->get(static::$tokenName);
         }
 
+        public function setToken(string $token)
+        {
+            $this->set(static::$tokenName, $token);
+            return $this;
+        }
 
         public function setTokenName(string $tokenName)
         {
