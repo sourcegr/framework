@@ -35,10 +35,8 @@
             $closure($a);
 
             foreach ($a->routes as $route) {
-                $route->$memberMethod($param);
+                $this->routes[] = $route->$memberMethod($param);
             }
-
-            $this->routes = $a->routes;
         }
 
         public function filterRoutes($method)
@@ -80,11 +78,6 @@
             }
 
             return [$restfull, $withoutParams, $withParams];
-        }
-
-        public function getFourOhFour()
-        {
-            throw new BoomException(new Boom(HTTPResponseCode::HTTP_NOT_FOUND));
         }
 
         public function addRoute(
@@ -154,10 +147,12 @@
             return $this->addRoute(['DELETE'], $url, $callback, $method);
         }
 
-        public function rest($url, $controller) {
-            $r = new RestfullRoute($controller, $url, null, null, null);
-            $this->routes[] = $r;
-            return $r;
+        public function rest($url, $controller, $callback) {
+            $rr = new RestfullRoute($url, $controller);
+            $callback($rr);
+            foreach ($rr->getCompiledRoutes() as $route) {
+                $this->addRoute(...$route);
+            }
         }
 
         /*

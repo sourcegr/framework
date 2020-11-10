@@ -16,7 +16,7 @@
         public $routeSegments = null;
 
         protected $url;
-        protected $prefix;
+        protected $prefix = '';
         protected $method;
         protected $hasWildcardParameter = false;
         protected $where;
@@ -44,7 +44,8 @@
         }
 
 
-        public function getRouteSegments() {
+        public function getRouteSegments()
+        {
             if ($this->routeSegments) {
                 return $this->routeSegments;
             }
@@ -59,14 +60,13 @@
          */
         public function getCompiledParam(string $param)
         {
-            return $param === 'url' ?
-                $this->getURL() :
-                $this->$param ?? null;
+            return $param === 'url' ? $this->getURL() : $this->$param ?? null;
         }
 
         public function setPrefix(string $prefix): Route
         {
-            $this->prefix = $prefix ? trim($prefix, "/") . '/' : '';
+            $prefix = $prefix ? trim($prefix, "/") . '/' : '';
+            $this->prefix = $prefix . $this->prefix;
             return $this;
         }
 
