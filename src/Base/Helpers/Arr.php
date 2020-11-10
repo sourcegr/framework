@@ -102,4 +102,9 @@
 
             return array_merge(...$all);
         }
+
+        public static function last(array $arr)
+        {
+            return end($arr);
+        }
     }
