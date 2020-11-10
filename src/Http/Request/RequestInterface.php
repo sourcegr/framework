@@ -18,6 +18,7 @@
             array $files = [],
             array $server = []
         );
+        public function all();
 
         public function expectsJson(): bool;
 
@@ -27,9 +28,13 @@
 
         public function get(string $key, string $type = null): ?string;
 
-        public function files(): array;
+        public function files();
 
         public function persistSession();
 
         public function flash(string $name, $value);
+
+        public function addFlash($flashNameOrArray, $flashData = null);
+
+        public function getBearerToken();
     }
