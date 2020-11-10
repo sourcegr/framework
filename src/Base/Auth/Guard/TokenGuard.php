@@ -48,6 +48,7 @@
 
             $token = $this->request->getBearerToken();
 
+
             if (!$token && $this->allowPost) {
                 $token = $this->request->get($tokenName, 'POST');
             }
@@ -59,7 +60,11 @@
             if ($token) {
                 $user = $this->authProvider->getUserByToken($token);
             }
-
             return $this->user = $user;
+        }
+
+        public function authenticate(array $credentials = [])
+        {
+            // TODO: Implement authenticate() method.
         }
     }

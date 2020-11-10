@@ -37,6 +37,8 @@
             $this->user = $result;
 
             if ($result) {
+                $this->session->regenerateToken();
+                $this->authProvider->setToken($result, $this->session->getToken());
                 $this->session->setUserId($this->authProvider->getLoggedUserId($this->user));
             }
             return $this->user;
