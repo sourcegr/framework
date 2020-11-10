@@ -14,7 +14,9 @@
 
         public function isReadable(string $directory = ''): bool;
 
-        public function saveFile(string $filenameWithPath, string $toFilename, string $onDirectory = ''): bool;
+        public function saveFile(string $filenameWithPath, string $toFilename, string $onDirectory = '');
+
+        public function saveFileUniq(string $filenameWithPath, string $toFilename, string $onDirectory = '');
 
         public function deleteFile(string $filenameWithPath, string $onDirectory = ''): bool;
 
