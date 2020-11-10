@@ -126,6 +126,7 @@
             $normalized = [];
 
             foreach ($files as $index => $file) {
+
                 if (!is_array($file['name'])) {
                     $normalized[$index][] = new UploadedFile($file);
                     continue;
@@ -167,6 +168,11 @@
             return $this->headerBag->get($header) ?? null;
         }
 
+        public function all()
+        {
+            return $this->varsBag;
+        }
+
         public function get(string $key, string $type = null): ?string
         {
             if (!$type) {
@@ -180,8 +186,19 @@
             return $this->varsBag[$type] ? ($this->varsBag[$type]->get($key) ?? null) : null;
         }
 
-        public function files(): array
+        public function files($key = null)
         {
+            if ($key) {
+                $f = $this->fileBag->get($key);
+                if (!is_array($f)) {
+                    return null;
+                }
+                if (count($f) == 1) {
+                    return $f[0];
+                }
+
+                return $f;
+            }
             return $this->fileBag->values();
         }
 
