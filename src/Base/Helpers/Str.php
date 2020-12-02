@@ -18,7 +18,7 @@
          */
         public static function random($size)
         {
-            $str = str_replace(['/', '+', '='], '', base64_encode(random_bytes($size*2)));
+            $str = str_replace(['/', '+', '='], '', base64_encode(random_bytes($size * 2)));
             return substr($str, 0, $size);
         }
 
@@ -30,5 +30,16 @@
         public static function endsWith(string $haystack, string $needle)
         {
             return $needle !== '' && substr($haystack, -strlen($needle)) === $needle;
+        }
+
+        public static function toCamelCase($string, $capitalizeFirstCharacter = false)
+        {
+            $str = str_replace('-', '', ucwords(str_replace('_', '-', $string), '-'));
+
+            if (!$capitalizeFirstCharacter) {
+                $str = lcfirst($str);
+            }
+
+            return $str;
         }
     }
