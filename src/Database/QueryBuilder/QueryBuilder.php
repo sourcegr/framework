@@ -10,6 +10,7 @@
 
     class QueryBuilder
     {
+        private $debug = false;
         private $table;
         private $params;
 
@@ -36,6 +37,11 @@
             $this->table = $table;
             $this->grammar = $grammar;
             $this->params = new Params($this);
+        }
+
+        public function setDebug($debug = true){
+            $this->debug = $debug;
+            return $this;
         }
 
         public function setGrammar($grammar)
@@ -261,12 +267,12 @@
 
         public function max($col)
         {
-            return $this->columns("MAX($col) as max")->first()['max'];
+            return $this->select("MAX($col) as max")[0]['max'] ?? false;
         }
 
         public function min($col)
         {
-            return $this->columns("MIN($col) AS min")->first()['min'];
+            return $this->select("MIN($col) AS min")[0]['min'] ?? false;
         }
 
         public function groupCount($groupCol)
@@ -281,7 +287,7 @@
 
         public function count()
         {
-            return $this->select("COUNT(*) AS count");
+            return $this->select("COUNT(*) AS count")[0]['count'] ?? false;
         }
 
         public function find($id, $idName = 'id')
@@ -304,7 +310,7 @@
         {
             $res = $this->select($fields);
             if (is_array($res)) {
-                return $res[0];
+                return $res[0] ?? null;
             }
             return null;
         }

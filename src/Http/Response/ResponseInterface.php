@@ -20,6 +20,8 @@
 
         public function sendFile($file);
 
+//        public function sendDownload($contents);
+
         public function downloadFile($file);
 
 

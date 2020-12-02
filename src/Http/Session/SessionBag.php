@@ -79,7 +79,7 @@
 
         protected function prepareForEngine()
         {
-            $jsonData = json_encode($this->all());
+            $jsonData = json_encode($this->all(), JSON_UNESCAPED_UNICODE);
             if ($jsonData === $this->originalSession) {
                 //save some cpu
                 return null;

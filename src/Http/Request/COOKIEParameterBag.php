@@ -6,6 +6,7 @@
     namespace Sourcegr\Framework\Http\Request;
 
 
+    use Sourcegr\Framework\Base\Encryptor\DecryptionException;
     use Sourcegr\Framework\Base\Encryptor\EncryptorInterface;
     use Sourcegr\Framework\Base\ParameterBag;
 
@@ -54,8 +55,13 @@
                 return $default;
             }
 
+
             if ($this->encryptor) {
-                return $this->encryptor->decrypt($val);
+                try {
+                    return $this->encryptor->decrypt($val);
+                } catch (DecryptionException $e) {
+                    return $default;
+                }
             }
 
             return $val;

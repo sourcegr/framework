@@ -15,13 +15,13 @@
 
     class HttpRequest implements RequestInterface
     {
-        const METHOD_HEAD = 'HEAD';
-        const METHOD_GET = 'GET';
-        const METHOD_POST = 'POST';
-        const METHOD_PUT = 'PUT';
-        const METHOD_PATCH = 'PATCH';
-        const METHOD_DELETE = 'DELETE';
-        const METHOD_OPTIONS = 'OPTIONS';
+        public const METHOD_HEAD = 'HEAD';
+        public const METHOD_GET = 'GET';
+        public const METHOD_POST = 'POST';
+        public const METHOD_PUT = 'PUT';
+        public const METHOD_PATCH = 'PATCH';
+        public const METHOD_DELETE = 'DELETE';
+        public const METHOD_OPTIONS = 'OPTIONS';
 
 
         protected $varsBag;
@@ -69,6 +69,11 @@
          * @var GuardInterface $auth
          */
         public $auth = null;
+
+        /**
+         * @var $user
+         */
+        public $user = null;
 
 
         public function __construct(
@@ -171,6 +176,15 @@
         public function all()
         {
             return $this->varsBag;
+        }
+
+        public function allGET()
+        {
+            return $this->all()['GET'];
+        }
+        public function allPOST()
+        {
+            return $this->all()['POST'];
         }
 
         public function get(string $key, string $type = null): ?string

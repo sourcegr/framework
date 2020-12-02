@@ -201,16 +201,18 @@
 
         public function shutDown()
         {
-            header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + (7 * 24 * 60 * 60))); // 1 week
-            header("Cache-Control: no-cache");
-            header("Pragma: no-cache");
+//            header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + (7 * 24 * 60 * 60))); // 1 week
+//            header("Cache-Control: no-cache");
+//            header("Pragma: no-cache");
 
 
             $response = $this->response->makeResponse();
 //            dd("I DIE!", $response);
 
             http_response_code($this->response->statusCode);
+
             foreach ($this->response->headers as $headerName => $headerValue) {
+
                 header("$headerName: $headerValue");
             }
 //dd($this->request->session->getToken());

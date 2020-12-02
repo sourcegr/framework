@@ -2,11 +2,8 @@
 
     declare(strict_types=1);
 
-
     namespace Sourcegr\Framework\Base\Auth\Guard;
 
-
-    use Sourcegr\Framework\Base\Auth\Engine\AuthUserProviderInterface;
 
     interface GuardInterface
     {
