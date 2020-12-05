@@ -14,12 +14,13 @@
     class DB implements DBInterface
     {
         protected $config = null;
+        protected $connection = null;
         protected $grammar;
 
 
         public function __construct(PDOConnection $PDOConnection)
-
         {
+            $this->connection = $PDOConnection->connection;
             $this->grammar = $PDOConnection->grammar;
         }
 
@@ -34,7 +35,11 @@
             $qb = new QueryBuilder($this->grammar, $table);
             return $qb;
         }
-
+        public function RAW(string $SQL, array $params=[]){
+            $st = $this->connection->prepare($SQL);
+            $res = $st->execute($params);
+            return $res;
+        }
 
         public function getGrammar(): GrammarInterface
         {
