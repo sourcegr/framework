@@ -87,7 +87,7 @@
                 # try to match exact routes
                 # we need to convert the matched to a RouteMatch!
                 if ($route->getCompiledParam('url') === $url) {
-                    $matched = new RouteMatch($route, null, null);
+                    $matched = new RouteMatch($route, null, $this->predicateCompiler);
                     $matched->url = $url;
                     return $matched;
                 }

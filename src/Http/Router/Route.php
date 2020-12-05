@@ -37,10 +37,11 @@
             $this->callback = $callback;
 
             if ($predicate !== null) {
-                $this->predicates[] = $predicate;
+                $this->predicates = Arr::ensureArray($predicate);
             }
-
-            $this->$middlewares = $middlewares ?? [];
+            if ($middlewares !== null) {
+                $this->middlewares = Arr::ensureArray($middlewares);
+            }
         }
 
 

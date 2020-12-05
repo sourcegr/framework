@@ -85,14 +85,14 @@
             string $url,
             $callback,
             $callbackMethod = null,
-            $predicate = null,
-            string $middleware = null
+            $predicates = null,
+            $middleware = null
         ): Route {
             if (is_string($callback) && is_string($callbackMethod)) {
                 $callback = "$callback@$callbackMethod";
             }
 
-            $r = new Route($method, $url, $callback, $predicate, $middleware);
+            $r = new Route($method, $url, $callback, $predicates, $middleware);
 //            $r->setCollection($this);
             $this->routes[] = $r;
             return $r;
@@ -112,12 +112,22 @@
         // parameter setting
         public function setPrefix(string $basePath, callable $closure = null)
         {
-            return $this->callRouteMethod('setPrefix', $basePath, $closure);
+            $this->callRouteMethod('setPrefix', $basePath, $closure);
+            return $this;
         }
 
         public function setMiddleware(string $middleware, callable $closure = null)
         {
-            return $this->callRouteMethod('setMiddleware', $middleware, $closure);
+            $this->callRouteMethod('setMiddleware', $middleware, $closure);
+            return $this;
+        }
+
+        public function setPredicate(callable $predicate = null)
+        {
+            foreach ($this->routes as $route){
+                $route->setPredicate($predicate);
+            }
+            return $this;
         }
 
 
@@ -150,9 +160,14 @@
         public function rest($url, $controller, $callback) {
             $rr = new RestfullRoute($url, $controller);
             $callback($rr);
+            $predicates = $rr->getPredicates();
+            $middleware = $rr->getMiddleware();
             foreach ($rr->getCompiledRoutes() as $route) {
+                $route[] = $predicates;
+                $route[] = $middleware;
                 $this->addRoute(...$route);
             }
+            return $this;
         }
 
         /*

@@ -22,7 +22,7 @@
                 'db' => 'test'
             ];
             $manager = new DBConnectionManager();
-            $result = $manager->create( $name, $driver, $config);
+            $result = $manager->create($name, $driver, $config);
 
 
             self::assertInstanceOf(PDOConnection::class, $result);

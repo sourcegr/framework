@@ -23,7 +23,17 @@
         protected $extraRoutes = [];
         protected $allowRelationGET = false;
         protected $allowRelationPOST = false;
+        protected $predicates = [];
+        protected $middleware = [];
 
+        public function getPredicates()
+        {
+            return $this->predicates;
+        }
+        public function getMiddleware()
+        {
+            return $this->middleware;
+        }
 
 
         protected function getMethodMap($m)
@@ -161,6 +171,11 @@
             $this->controller = $controller;
             return $this;
         }
+        public function setPredicate(\Closure $predicate)
+        {
+            $this->predicates[] = $predicate;
+            return $this;
+        }
 
         public function setVarName($varName)
         {
@@ -195,6 +210,9 @@
             $this->allowRelationPOST = true;
             return $this;
         }
+        // fixme todo move bool $useParameter = true, string $controllerMethod = null
+        // to an object in order to add predicates to also these routes
+        // need to accommodate with the extra, and the getCompiledRoutes() method
         public function add(string $route, string $method, bool $useParameter = true, string $controllerMethod = null)
         {
             if (!$controllerMethod) {

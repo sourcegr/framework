@@ -87,11 +87,14 @@
                 case 'mysql':
                     $host = $config['host'] ?? '127.0.0.1';
                     $db = $config['db'] ?? 'test';
-                    $port = $config['port'] ?? 3386;
+                    $port = $config['port'] ?? 3306;
                     return "mysql:host=$host;port=$port;dbname=$db";
 
-                case 'postgress':
-                    return '';
+                case 'pgsql':
+                    $host = $config['host'] ?? '127.0.0.1';
+                    $db = $config['db'] ?? 'test';
+                    $port = $config['port'] ?? 5432;
+                    return "pgsql:host=$host;port=$port;dbname=$db";
 
                 case 'dummy':
                     return 'sqlite::memory:';

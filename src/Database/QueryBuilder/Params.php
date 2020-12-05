@@ -77,9 +77,11 @@
                             $val = array_map('trim', explode(',', $val));
                         }
 
+
                         if (is_array($val)) {
                             array_push($localParams, ...$val);
                             $phText = $PLACEHOLDER(count($val));
+
                             $allParts[] = "$col $term ($phText)";
                             continue;
                         }
@@ -121,6 +123,7 @@
                     var_dump($spec);
                 }
             }
+
 
             $w = $isSubselect ? '' : 'WHERE ';
             return [$localParams, $w . notNullAdder::create($allParts, '')];

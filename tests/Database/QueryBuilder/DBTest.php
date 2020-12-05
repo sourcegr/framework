@@ -79,7 +79,4 @@ class DBTest extends TestCase
 
         $this->assertInstanceOf(TextDumpGrammar::class, $actual, 'testSetGrammar');
     }
-
-
-
 }

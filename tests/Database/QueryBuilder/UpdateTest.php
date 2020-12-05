@@ -38,6 +38,7 @@ class UpdateTest extends TestCase
         $this->assertEquals($expected, $actual, 'testUpdate SQL');
         $this->assertEquals($expectedParams, $params, 'testUpdate params');
     }
+
     public function testUpdateWith2Parameters()
     {
         $res = $this->init();
