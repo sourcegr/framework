@@ -51,11 +51,16 @@
 
 
             if (!$result) {
-                $result = $this->QB()->insert([
+                $result = $this->QB()->returning('id')->insert([
                     'id' => $id,
                     'data' => $data
-                ]);
+                ])['id'] ?? null;
+
+                if ($result === null) {
+                    throw new SessionException("Session cannot be created, problem with database");
+                }
             }
+
 
             return $result;
         }
