@@ -20,9 +20,9 @@
 
         public function select($sqlString, $sqlParams, $mode = null);
 
-        public function insert($sqlString, $sqlParams);
+        public function insert($sqlString, $sqlParams, $returning = null);
 
-        public function update($sqlString, $sqlParams);
+        public function update($sqlString, $sqlParams, $returning = null);
 
-        public function delete($sqlString, $sqlParams);
+        public function delete($sqlString, $sqlParams, $returning = null);
     }

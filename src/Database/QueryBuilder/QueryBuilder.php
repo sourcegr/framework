@@ -32,6 +32,7 @@
         private $sqlParams = [];
 
         private $grammar;
+        private $returning = null;
 
 
         public function __construct(GrammarInterface $grammar, string $table)
@@ -69,6 +70,43 @@
             return $this->columns(...$args);
         }
 
+        public function returning()
+        {
+            $args = func_get_args();
+            $count = count($args);
+
+            if ($count == 0) { // ()
+                $this->returning = '*';
+                return $this;
+            }
+
+            if ($count == 1) {
+                $returning = $args[0];
+
+                if (is_array($returning)) { // (['id']), (['id', 'lala'])
+                    if (count($returning) == 0) {
+                        $this->returning = '*';
+                        return $this;
+                    }
+
+                    $this->returning = $returning;
+                    return $this;
+                }
+
+                if ($returning === '' || $returning === '*') { // (''), ('*'),
+                    $this->returning = '*';
+                    return $this;
+                }
+
+
+                $this->returning = array_map('trim', explode(',', $returning));
+                return $this;
+            }
+
+            $this->returning = $args;
+            return $this;
+        }
+
         public function columns()
         {
             $this->selectAll = false;
@@ -100,7 +138,7 @@
                     return $this;
                 }
 
-//            ('id'), ('id, name')
+
                 $this->cols = array_map('trim', explode(',', $cols));
                 return $this;
             }
@@ -297,17 +335,6 @@
             return $this->where($idName, $id)->first();
         }
 
-        public function select($fields = null)
-        {
-            if ($fields) {
-                $this->cols($fields);
-            }
-
-            [$sql, $params] = $this->createSelect();
-            return $this->grammar->select($sql, $params);
-        }
-
-
         public function first($fields = null)
         {
             $res = $this->select($fields);
@@ -315,6 +342,20 @@
                 return $res[0] ?? null;
             }
             return null;
+        }
+
+
+        public function select($fields = null)
+        {
+            if ($fields !== null) {
+                $this->cols($fields);
+            }
+
+            [$sql, $params] = $this->createSelect();
+            if ($this->debug) {
+                dd($sql, $params);
+            }
+            return $this->grammar->select($sql, $params);
         }
 
         public function update()
@@ -373,9 +414,11 @@
                 $sql,
                 $whereString);
 
-
-            return $this->grammar->update($notNullAdder->join(' '),
-                $this->sqlParams);
+            $sql = $notNullAdder->join(' ');
+            if ($this->debug) {
+                dd($sql, $this->sqlParams);
+            }
+            return $this->grammar->update($sql, $this->sqlParams, $this->returning);
         }
 
         public function insert($insertDefinition = null)
@@ -410,7 +453,10 @@
 
             $sql = 'INSERT INTO ' . $this->table . " ($columnsText) VALUES ($placeholdersText)";
 
-            return $this->grammar->insert($sql, $this->sqlParams);
+            if ($this->debug) {
+                dd($sql, $this->sqlParams);
+            }
+            return $this->grammar->insert($sql, $this->sqlParams, $this->returning);
         }
 
         public function delete()
@@ -424,9 +470,12 @@
             $notNullAdder->addNotNull('DELETE FROM',
                 $this->table,
                 $whereString);
+            $sql = $notNullAdder->join(' ');
 
-            return $this->grammar->delete($notNullAdder->join(' '),
-                $this->sqlParams);
+            if ($this->debug) {
+                dd($sql, $this->sqlParams);
+            }
+            return $this->grammar->delete($sql, $this->sqlParams, $this->returning);
         }
 
 
